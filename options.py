@@ -2,10 +2,18 @@ import os
 import sys
 
 # Airport codes file
-try:
+try: 
     AIRPORT_CODES_FILE = os.path.join(sys._MEIPASS, 'airport_codes.xls.xlsx')
-except:
+except: 
     AIRPORT_CODES_FILE ='airport_codes.xls.xlsx'
+# Settings file and results directory for CSV file
+try:
+    settings_file = os.path.join(os.getcwd(), 'settings.json')
+    results_path = os.path.join(os.getcwd(), 'results', '')
+    os.makedirs(results_path, exist_ok=True)
+    # chromedriver_path = os.path.join(os.getcwd(), 'chromedriver', 'chromedriver.exe')
+except Exception as e:
+    raise (f'{e}')
 # GoogleFlights XPATH
 XP_AIRPORT_CODES = '''//*[@id="yDmH0d"]/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li[1]/div/div[2]/div/div[2]/div[3]/span'''
 XP_PRICE = '''//*[@id="yDmH0d"]/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li[1]/div/div[2]/div/div[2]/div[6]/div[1]/div[2]/span'''
@@ -51,3 +59,4 @@ DEFATULT_SETTINGS = '''
         "first"
     ]
 }'''
+

@@ -11,14 +11,15 @@ from options import *
 # embed file to the exe
 # pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
 
-try:
-    settings_file = os.path.join(os.getcwd(), 'settings.json')
-    results_path = os.path.join(os.getcwd(), 'results', '')
-    os.makedirs(results_path, exist_ok=True)
-    # chromedriver_path = os.path.join(os.getcwd(), 'chromedriver', 'chromedriver.exe')
-except Exception as e:
-    raise (f'Error: {e}')
-
+def print_welcome():
+    print(f'''
+                GoogleFlights scraper version 1.0
+          
+                        fly high
+                        
+                    Press CTRL+C to exit.
+          ''')
+        
 
 def update_settings_file(data: dict):
     try:
@@ -26,7 +27,6 @@ def update_settings_file(data: dict):
             json.dump(data, f, indent=4)
     except Exception as e:
         raise (f'Error: {e}')
-
 
 def read_settings_file():
     try:
@@ -184,10 +184,10 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
     finally:
         end_time = datetime.datetime.now()
         print_end_info(start_time, end_time)
-        
+
         
 if __name__ == "__main__":
-    print('\n*** GoogleFlights scraper version 1.0 ***')
+    print_welcome()
     ui = UserInput()
     filename = None
     from_ = []
@@ -214,7 +214,7 @@ if __name__ == "__main__":
                 delta_ = ui.get_integer("\n[>] Select how many days you want to stay.")
                 inbound_ = add_days(outbound_, delta_)
                 flexdays_ = ui.get_integer("\n[>] Select return departure date flexibility.", allow_skip=True)
-                lastdate_ = ui.get_date_from_input("\n[-] Select the last available date for departure flight.", allow_skip=True)
+                lastdate_ = ui.get_date_from_input("\n[>] Select the last available date for departure flight.", allow_skip=True)
                 fastmode_ = ui.yes_or_not("\n[>] Do you want to execute script in fast mode?", allow_skip=True)
                 timeout_ = ui.get_integer("\n[>] Default timeout between each search is 10 seconds.", allow_skip=True)
                 # If no limit is given, set lastdate to +1 year.
@@ -249,6 +249,5 @@ if __name__ == "__main__":
                 scraper.quit()
             else:
                 continue
-
     except KeyboardInterrupt:
-        exit_app('\nScript terminated by user.', filename)
+        exit_app('\n\nScript terminated by user.', filename)

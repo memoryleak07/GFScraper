@@ -3,6 +3,7 @@ import datetime
 from options import AIRPORT_CODES_FILE
 # file_name = 'airport_codes.xls.xlsx'
 
+
 class UserInput():
     def __init__(self) -> None:
         pass
@@ -57,9 +58,13 @@ class UserInput():
         while True:
             # Prompt the user for the string to search for and the country to filter by
             airport = input(
-                'Enter a city to search for (press enter to skip): ').lower()
+                '\n[>] Enter a CITY to search for (press enter to skip): ').lower()
             country = input(
-                'Enter a country to filter by (press enter to skip): ').lower()
+                '\n[>] Enter a COUNTRY to filter by (press enter to skip): ').lower()
+            # If both are empty return
+            if not airport and not country:
+                print("Please enter at least one CITY or a COUNTRY.")
+                continue
             # Create a boolean mask to filter by country
             if country:
                 mask = (df['Country'].str.lower() == country)
@@ -71,40 +76,42 @@ class UserInput():
             # Check if the result is empty
             if result_df.empty:
                 print(
-                    f'No airports found that start with \'{airport}\' in \'{country}\'.')
+                    f'\nNo airports found that start with \'{airport}\' in \'{country}\'.')
                 continue
             else:
                 print(
-                    f'The following airports start with \'{airport}\' in \'{country}\':')
-                # Print airports
+                    f'\nThe following airports start with \'{airport}\' in \'{country}\':')
+                # Print enumerate found airports
                 for i, airport in enumerate(result_df):
                     print(f'{i} - {airport}')
+                # Ask user to continue or break
+                if not self.yes_or_not("\n[>] Enter \'y\' to go next step. Enter \'n\' to begin new search.'", allow_skip=True):
+                    continue
                 # Prompt the user to select an airport by index
                 while True:
                     try:
                         indices = input(
-                            'Enter a comma-separated list of indices of the airports you want to select: ')
+                            '\n[>] Enter a comma-separated list of indices of the airports you want to select: ')
                         indices = [int(index.strip())
                                    for index in indices.split(',')]
                         selected_airports = result_df.iloc[indices]
                         break
                     except (ValueError, IndexError):
                         print('Invalid input, please try again.')
-                # Look up the airport codes in the DataFrame and print them
-
+                # Look up the airport codes in the DataFrame print and append them
                 for airport in selected_airports:
                     code = df.loc[df['Airport'] == airport, 'Code'].iloc[0]
                     codes.append(code)
                     print(f'The code for {airport} is {code}.')
-
+                # Print all codes
                 print(
-                    f'The codes for the selected airports are: {", ".join(codes)}.')
-
-                if not self.yes_or_not('\n[>] Enter \'y\' to go next step. Enter \'n\' to add more airports.'):
+                    f'\nThe codes for the selected airports are: {", ".join(codes)}.')
+                # Ask for exit or add more
+                if not self.yes_or_not('\n[>] Enter \'y\' to go next step. Enter \'n\' to add more airports.', allow_skip=True):
                     continue
-
+                # Finally return airport codes
                 return codes
-            
+
     # def select_days_number(self, message, prompt='Enter the total number of nights: '):
     #     print(message)
     #     while True:
