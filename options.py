@@ -40,5 +40,3 @@ DEFATULT_SETTINGS = '''
         "first"
     ]
 }'''
-
-

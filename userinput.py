@@ -8,14 +8,16 @@ class UserInput():
     def __init__(self) -> None:
         pass
 
-    def yes_or_not(self, message, prompt='Enter \'y\' or \'n\': '):
+    def yes_or_not(self, message, prompt='Enter \'y\' or \'n\': ', allow_skip=False):
         print(message)
+        if allow_skip:
+            prompt = f'{prompt} (press enter to skip): '
         while True:
             try:
                 choice = input(prompt).lower()
                 if choice in ['n', 'no']:
                     return False
-                elif choice in ['y', 'yes', '']:
+                elif allow_skip and choice == '' or choice in ['y', 'yes']:
                     return True
             except ValueError:
                 print('Invalid date format, please try again.')
@@ -35,28 +37,10 @@ class UserInput():
             except ValueError:
                 print('Invalid date format, please try again.')
 
-    def select_days_number(self, message, prompt='Enter the total number of nights: '):
-        print(message)
-        while True:
-            try:
-                days = int(input(prompt))
-                return days
-            except ValueError:
-                print('Invalid input, please enter an integer.')
-
-    def select_flex_days(self, message, prompt='Enter how many days of flexibiliy (press enter to skip): '):
-        print(message)
-        while True:
-            try:
-                choice = input(prompt)
-                if not choice:
-                    return None
-                return int(choice)
-            except ValueError:
-                print('Invalid input, please enter an integer.')
-    
     def get_integer(self, message, prompt="Enter an integer: ", allow_skip=False):
         print(message)
+        if allow_skip:
+            prompt = f'{prompt} (press enter to skip): '
         while True:
             try:
                 choice = input(prompt)
@@ -74,7 +58,7 @@ class UserInput():
         while True:
             # Prompt the user for the string to search for and the country to filter by
             airport = input(
-                'Enter a destination to search for (press enter to skip): ').lower()
+                'Enter a city to search for (press enter to skip): ').lower()
             country = input(
                 'Enter a country to filter by (press enter to skip): ').lower()
             # Create a boolean mask to filter by country
@@ -121,3 +105,23 @@ class UserInput():
                     continue
 
                 return codes
+            
+    # def select_days_number(self, message, prompt='Enter the total number of nights: '):
+    #     print(message)
+    #     while True:
+    #         try:
+    #             days = int(input(prompt))
+    #             return days
+    #         except ValueError:
+    #             print('Invalid input, please enter an integer.')
+
+    # def select_flex_days(self, message, prompt='Enter how many days of flexibiliy (press enter to skip): '):
+    #     print(message)
+    #     while True:
+    #         try:
+    #             choice = input(prompt)
+    #             if not choice:
+    #                 return None
+    #             return int(choice)
+    #         except ValueError:
+    #             print('Invalid input, please enter an integer.')
