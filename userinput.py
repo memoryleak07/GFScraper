@@ -1,8 +1,7 @@
 import pandas as pd
 import datetime
-
-file_name = 'airport_codes.xls.xlsx'
-
+from options import AIRPORT_CODES_FILE
+# file_name = 'airport_codes.xls.xlsx'
 
 class UserInput():
     def __init__(self) -> None:
@@ -54,7 +53,7 @@ class UserInput():
         print(message)
         codes = []
         # Load the data from the Excel file
-        df = pd.read_excel(file_name)
+        df = pd.read_excel(AIRPORT_CODES_FILE)
         while True:
             # Prompt the user for the string to search for and the country to filter by
             airport = input(

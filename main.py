@@ -8,6 +8,8 @@ from userinput import *
 from xpathscraper import XpathScraper
 from options import *
 # from readresult import ReadResult
+# embed file to the exe
+# pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
 
 try:
     settings_file = os.path.join(os.getcwd(), 'settings.json')
