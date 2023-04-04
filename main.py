@@ -7,14 +7,13 @@ from datetime import timedelta
 from userinput import *
 from xpathscraper import XpathScraper
 from options import *
-# from readresult import ReadResult
+from readresults import ReadCSVResult
 # embed file to the exe
 # pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
 
 def print_welcome():
     print(f'''
                 GoogleFlights scraper version 1.0
-          
                         fly high
                         
                     Press CTRL+C to exit.
@@ -211,12 +210,12 @@ if __name__ == "__main__":
                 from_ = ui.select_airport("\n[>] Select a list of departure destination cities.")
                 to_ = ui.select_airport("\n[>] Select a list of arrival destination cities")
                 outbound_ = ui.get_date_from_input("\n[>] Select the first available date for departure flight.")
-                delta_ = ui.get_integer("\n[>] Select how many days you want to stay.")
+                delta_ = ui.get_integer("\n[>] Select how many days you want to stay.", allow_zero=False)
                 inbound_ = add_days(outbound_, delta_)
-                flexdays_ = ui.get_integer("\n[>] Select return departure date flexibility.", allow_skip=True)
+                flexdays_ = ui.get_integer("\n[>] Select return departure date flexibility.", allow_skip=True, allow_zero=False)
                 lastdate_ = ui.get_date_from_input("\n[>] Select the last available date for departure flight.", allow_skip=True)
                 fastmode_ = ui.yes_or_not("\n[>] Do you want to execute script in fast mode?", allow_skip=True)
-                timeout_ = ui.get_integer("\n[>] Default timeout between each search is 10 seconds.", allow_skip=True)
+                timeout_ = ui.get_integer("\n[>] Default timeout between each search is 10 seconds.", allow_skip=True, allow_zero=False)
                 # If no limit is given, set lastdate to +1 year.
                 if not lastdate_:
                     lastdate_ = add_days(outbound_, 365)

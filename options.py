@@ -33,7 +33,7 @@ XPATH_DICT = {
     'duration':XP_DURATION,
     'stops':XP_STOPS,
 }
-XPATH_KEYS = [k for k in XPATH_DICT.items()]
+XPATH_KEYS = [k for k, v in XPATH_DICT.items()]
 XPATH_LIST = [str(v) for v in XPATH_DICT.values()]
 # Default settings.json
 DEFATULT_SETTINGS = '''

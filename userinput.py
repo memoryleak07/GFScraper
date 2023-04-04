@@ -22,7 +22,7 @@ class UserInput():
             except ValueError:
                 print('Invalid date format, please try again.')
 
-    def get_date_from_input(self, message, prompt='Enter a date in the format yyyy-mm-dd: ', allow_skip=False):
+    def get_date_from_input(self, message, prompt='Enter a date in the format yyyy-mm-dd: ', allow_skip=False, allow_past_date=False):
         print(message)
         if allow_skip:
             prompt = f'{prompt} (press enter to skip): '
@@ -33,11 +33,14 @@ class UserInput():
                     return None
                 year, month, day = map(int, date_str.split('-'))
                 date = datetime.date(year, month, day)
+                if not allow_past_date and (date < datetime.datetime.now().date()):
+                    print('Past dates are not allowed.')
+                    continue
                 return date
             except ValueError:
                 print('Invalid date format, please try again.')
 
-    def get_integer(self, message, prompt="Enter an integer: ", allow_skip=False):
+    def get_integer(self, message, prompt="Enter an integer: ", allow_skip=False, allow_zero=True):
         print(message)
         if allow_skip:
             prompt = f'{prompt} (press enter to skip): '
@@ -46,9 +49,13 @@ class UserInput():
                 choice = input(prompt)
                 if allow_skip and choice == '':
                     return None
+                if not allow_zero and choice == '0':
+                    print("Input \'0\' is not allowed.")
+                    continue
                 return int(choice)
             except ValueError:
                 print('Invalid input, please enter an integer.')
+
 
     def select_airport(self, message):
         print(message)
@@ -58,9 +65,9 @@ class UserInput():
         while True:
             # Prompt the user for the string to search for and the country to filter by
             airport = input(
-                '\n[>] Enter a CITY to search for (press enter to skip): ').lower()
+                '\nEnter a CITY to search for (press enter to skip): ').lower()
             country = input(
-                '\n[>] Enter a COUNTRY to filter by (press enter to skip): ').lower()
+                'Enter a COUNTRY to filter by (press enter to skip): ').lower()
             # If both are empty return
             if not airport and not country:
                 print("Please enter at least one CITY or a COUNTRY.")
@@ -85,7 +92,7 @@ class UserInput():
                 for i, airport in enumerate(result_df):
                     print(f'{i} - {airport}')
                 # Ask user to continue or break
-                if not self.yes_or_not("\n[>] Enter \'y\' to go next step. Enter \'n\' to begin new search.'", allow_skip=True):
+                if not self.yes_or_not("\n[>] Enter \'y\' to select. Enter \'n\' for a new search.'", allow_skip=True):
                     continue
                 # Prompt the user to select an airport by index
                 while True:
@@ -131,3 +138,17 @@ class UserInput():
     #             return int(choice)
     #         except ValueError:
     #             print('Invalid input, please enter an integer.')
+
+
+    def get_comma_list(self, message, prompt='Enter a comma-separated list of indices: ', allow_skip=False):
+        print(message)
+        if allow_skip:
+            prompt = f'{prompt} (press enter to skip): '
+        while True:
+            try:
+                indices = input(prompt)
+                indices = [int(index.strip())
+                           for index in indices.split(',')]
+                return indices
+            except (ValueError, IndexError):
+                print('Invalid input, please try again.')
