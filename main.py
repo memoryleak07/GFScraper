@@ -7,7 +7,7 @@ from datetime import timedelta
 from userinput import *
 from xpathscraper import XpathScraper
 from options import *
-from readresults import ReadCSVResult
+# from readresults import ReadCSVResult
 # embed file to the exe
 # pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
 
@@ -94,12 +94,13 @@ def print_search_info(from_, to_, outbound_, flexdays_, lastdate_, fastmode_, ti
           ''')
 
 
-def print_end_info(start_time: datetime, end_time: datetime):
+def print_end_info(start_time: datetime, end_time: datetime, count:int):
     time_elapsed = end_time - start_time
     print(f'''
           Start at: {start_time}
           End at: {end_time}
           Time elapsed: {time_elapsed}
+          Total flights: {count}
           ''')
 
 
@@ -128,7 +129,7 @@ def format_result(outbound_: str, inbound_: str, results: list):
 def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, tclass=None):
     results = []
     try:
-        # Buil the url used for scrape
+        # Build the url 
         url = url_builder(from_, to_, outbound_, inbound_, tclass)
         # Take outbound info for the first flight sorted and append to list
         results = results + scraper.get_elements_from_xpath_list(
@@ -155,6 +156,7 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
     start_time = datetime.datetime.now()
     delta = inbound_ - outbound_
     period = lastdate_ - outbound_
+    count = 0
     try:
         # Iterate over from_ and to_ airport codes list
         for f in from_:
@@ -170,6 +172,8 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
                     # Pass converted str to scraper and append to CSV file
                     add_list_to_csv_file(
                         scrape_go(f, t, outbound_dt, inbound_dt, fastmode_), filename)
+                    # Count +1
+                    count += 1
                     # If flexibiliy iterate over flexdays for the return flight date
                     if flexdays:
                         for j in range(flexdays):
@@ -178,11 +182,13 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
                             # Pass converted str to scraper and append to CSV file
                             add_list_to_csv_file(
                                 scrape_go(f, t, outbound_dt, inbound_dt, fastmode_), filename)
+                            # Count +1
+                            count += 1
     except KeyboardInterrupt:
         pass
     finally:
         end_time = datetime.datetime.now()
-        print_end_info(start_time, end_time)
+        print_end_info(start_time, end_time, count)
 
         
 if __name__ == "__main__":
