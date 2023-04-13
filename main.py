@@ -137,7 +137,11 @@ def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, t
         # If results list is empty, try catch the cause message
         if not results:
             results = [scraper.scrape(None, XP_NOT_FOUND_MESSAGE)]
+            not_found.append(1)
             return format_result(outbound_, inbound_, results)
+        else:
+            # Clean too_far list
+            not_found.clear()
         # Check if fast mode skip inbound flight information (duration, stops)
         if fast:
             return format_result(outbound_, inbound_, results)
@@ -162,6 +166,9 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
         for f in from_:
             for t in to_:
                 for i in range(period.days):
+                    # If many "date too far" break
+                    if len(not_found) >= 5:
+                        break
                     # Departure flight date is "outbound_date"
                     outbound_date = add_days(outbound_, i)
                     outbound_dt = datetime_to_str(outbound_date)
@@ -192,9 +199,10 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
 
         
 if __name__ == "__main__":
-    print_welcome()
     ui = UserInput()
+    print_welcome()
     filename = None
+    not_found = []
     from_ = []
     to_ = []
     try:
