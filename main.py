@@ -15,7 +15,6 @@ def print_welcome():
     print(f'''
                 GoogleFlights scraper version 1.0
                         fly high
-                        
                     Press CTRL+C to exit.
           ''')
         
@@ -168,6 +167,7 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
                 for i in range(period.days):
                     # If many "date too far" break
                     if len(not_found) >= 5:
+                        not_found.clear()
                         break
                     # Departure flight date is "outbound_date"
                     outbound_date = add_days(outbound_, i)
