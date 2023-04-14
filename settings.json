@@ -1,14 +1,11 @@
 {
-    "from": [
-        "ROM"
-    ],
-    "to": [
-        "BOG"
-    ],
-    "outbound": "2023-10-01",
-    "delta": 20,
-    "flexdays": 6,
-    "lastdate": "2024-09-30",
+    "from": ["NAP"],
+    "to": ["VIE", "IST", "OPO", "LIS"],
+    "outbound": "2023-04-15",
+    "delta": 1,
+    "flexdays": 1,
+    "weekend": false,
+    "lastdate": "2024-05-01",
     "fastmode": true,
-    "timeout": 15
+    "timeout": 10
 }

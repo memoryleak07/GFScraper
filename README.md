@@ -1,4 +1,4 @@
-# GoogleFlightsScraper 1.0
+# GoogleFlightsScraper 1.1
 
 Scraper di voli per GoogleFlights.
 Permette la ricerca di informazioni sui voli andata e ritorno data una lista di aeroporti di partenza ed una lista di aeroporti di destinazione. È necessario selezionare il primo giorno utile per la partenza ed il totale dei giorni prima del volo di ritorno. Tutti gli altri parametri sono opzionali. I risultati della ricerca è salvato in un file CSV.
@@ -24,13 +24,15 @@ Permette la ricerca di informazioni sui voli andata e ritorno data una lista di 
     "delta": 20,
     //Giorni flessibili per il volo di ritorno:
     "flexdays": 3,
+    //Cerca solo partenza nel weekend:
+    "weekend": false,
     //Ultima data utile per il volo di partenza:
     "lastdate": "2023-12-1",
     //Se true non prende informazioni sulla durata e le fermate del volo di ritorno:
     "fastmode": true, 
     //Timeout elemento non trovato tra una ricerca e l'altra
     "timeout": 10,
-    //Classe - NON GESTITO 1.0:
+    //Classe - NON GESTITO 1.1:
     "tclass": [
         "economy",
         "business",

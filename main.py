@@ -11,13 +11,16 @@ from options import *
 # embed file to the exe
 # pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
 
+
 def print_welcome():
     print(f'''
-                GoogleFlights scraper version 1.0
-                        fly high
-                    Press CTRL+C to exit.
+                GoogleFlightsScraper 
+                    version 1.1
+                     fly high
+                     
+                Press CTRL+C to exit
           ''')
-        
+
 
 def update_settings_file(data: dict):
     try:
@@ -25,6 +28,7 @@ def update_settings_file(data: dict):
             json.dump(data, f, indent=4)
     except Exception as e:
         raise (f'Error: {e}')
+
 
 def read_settings_file():
     try:
@@ -74,6 +78,20 @@ def datetime_to_str(date):
         date_str = date.strftime('%Y-%m-%d')
         return date_str
 
+
+def get_first_weekend_day(date:datetime.datetime|datetime.date):
+    day_of_week = date.weekday()
+    if day_of_week == 5:  # Saturday
+        first_day_of_weekend = date
+    elif day_of_week == 6:  # Sunday
+        first_day_of_weekend = date - datetime.timedelta(days=1)
+    else:
+        days_until_saturday = 5 - day_of_week
+        first_day_of_weekend = date + \
+            datetime.timedelta(days=days_until_saturday)
+    return first_day_of_weekend
+
+
 def url_builder(from_: str, to_: str, outbound_: str, inbound_: str, tclass: str = None):
     base_url = f'https://www.google.com/travel/flights?q=Flights+to+{to_}+from+{from_}+on+{outbound_}+through+{inbound_}'
     if tclass in ['first', 'business', 'economy']:
@@ -81,19 +99,20 @@ def url_builder(from_: str, to_: str, outbound_: str, inbound_: str, tclass: str
     return base_url
 
 
-def print_search_info(from_, to_, outbound_, flexdays_, lastdate_, fastmode_, timeout_):
+def print_search_info(from_, to_, outbound_, flexdays_, weekend_, lastdate_, fastmode_, timeout_):
     print(f'''
           From {from_} to {to_}
           Departure: {outbound_}
           Days: {delta_}
           Flexibility: {flexdays_}
+          Only weekends: {weekend_}
           Last date: {lastdate_}
           Fast mode: {fastmode_}
           Timeout: {timeout_}
           ''')
 
 
-def print_end_info(start_time: datetime, end_time: datetime, count:int):
+def print_end_info(start_time: datetime, end_time: datetime, count: int):
     time_elapsed = end_time - start_time
     print(f'''
           Start at: {start_time}
@@ -128,7 +147,7 @@ def format_result(outbound_: str, inbound_: str, results: list):
 def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, tclass=None):
     results = []
     try:
-        # Build the url 
+        # Build the url
         url = url_builder(from_, to_, outbound_, inbound_, tclass)
         # Take outbound info for the first flight sorted and append to list
         results = results + scraper.get_elements_from_xpath_list(
@@ -137,7 +156,7 @@ def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, t
         if not results:
             results = [scraper.scrape(None, XP_NOT_FOUND_MESSAGE)]
             not_found.append(1)
-            return format_result(outbound_, inbound_, results)
+            return format_result(outbound_, inbound_, [f'{from_}-{to_}'] + results)
         else:
             # Clean too_far list
             not_found.clear()
@@ -155,10 +174,11 @@ def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, t
     return format_result(outbound_, inbound_, results)
 
 
-def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime, flexdays: int, lastdate_: datetime, fastmode_=False):
+def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime, flexdays: int, lastdate_: datetime, fastmode_=False, weekend=False):
     start_time = datetime.datetime.now()
     delta = inbound_ - outbound_
     period = lastdate_ - outbound_
+    i_weekend = 0
     count = 0
     try:
         # Iterate over from_ and to_ airport codes list
@@ -169,10 +189,17 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
                     if len(not_found) >= 5:
                         not_found.clear()
                         break
-                    # Departure flight date is "outbound_date"
-                    outbound_date = add_days(outbound_, i)
+                    # Departure flight date is given by "outbound_" (date) + index (int) + index_weekend (int)
+                    outbound_date = add_days(outbound_, i+i_weekend)
+                    # If weekend increment index i_weekend + 5
+                    if weekend:
+                        outbound_date = get_first_weekend_day(
+                            date=outbound_date)
+                        i_weekend += 5
+                    # Convert for scraper
                     outbound_dt = datetime_to_str(outbound_date)
-                    inbound_dt = datetime_to_str(add_days(outbound_date, delta.days))
+                    inbound_dt = datetime_to_str(
+                        add_days(outbound_date, delta.days))
                     # Check for last avaiable departure date, if True skip to next destination
                     if lastdate_ == outbound_date:
                         break
@@ -185,7 +212,8 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
                     if flexdays:
                         for j in range(flexdays):
                             inbound_date = add_days(outbound_date, j+1)
-                            inbound_dt = datetime_to_str(add_days(inbound_date, delta.days))
+                            inbound_dt = datetime_to_str(
+                                add_days(inbound_date, delta.days))
                             # Pass converted str to scraper and append to CSV file
                             add_list_to_csv_file(
                                 scrape_go(f, t, outbound_dt, inbound_dt, fastmode_), filename)
@@ -197,7 +225,7 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
         end_time = datetime.datetime.now()
         print_end_info(start_time, end_time, count)
 
-        
+
 if __name__ == "__main__":
     ui = UserInput()
     print_welcome()
@@ -216,20 +244,31 @@ if __name__ == "__main__":
                 delta_ = data['delta']
                 inbound_ = add_days(outbound_, delta_)
                 flexdays_ = data['flexdays']
+                weekend_ = data['weekend']
                 lastdate_ = add_days(data['lastdate'], 0)
                 fastmode_ = data['fastmode']
                 timeout_ = data['timeout']
             else:
                 # Prompt user to enter data for search
-                from_ = ui.select_airport("\n[>] Select a list of departure destination cities.")
-                to_ = ui.select_airport("\n[>] Select a list of arrival destination cities")
-                outbound_ = ui.get_date_from_input("\n[>] Select the first available date for departure flight.")
-                delta_ = ui.get_integer("\n[>] Select how many days you want to stay.", allow_zero=False)
+                from_ = ui.select_airport(
+                    "\n[>] Select a list of departure destination cities.")
+                to_ = ui.select_airport(
+                    "\n[>] Select a list of arrival destination cities")
+                outbound_ = ui.get_date_from_input(
+                    "\n[>] Select the first available date for departure flight.")
+                delta_ = ui.get_integer(
+                    "\n[>] Select how many days you want to stay.", allow_zero=False)
                 inbound_ = add_days(outbound_, delta_)
-                flexdays_ = ui.get_integer("\n[>] Select return departure date flexibility.", allow_skip=True, allow_zero=False)
-                lastdate_ = ui.get_date_from_input("\n[>] Select the last available date for departure flight.", allow_skip=True)
-                fastmode_ = ui.yes_or_not("\n[>] Do you want to execute script in fast mode?", allow_skip=True)
-                timeout_ = ui.get_integer("\n[>] Default timeout between each search is 10 seconds.", allow_skip=True, allow_zero=False)
+                flexdays_ = ui.get_integer(
+                    "\n[>] Select return departure date flexibility.", allow_skip=True, allow_zero=False)
+                weekend_ = ui.yes_or_not(
+                    "\n[>] Do you want to depart only on weekends?", allow_skip=True)
+                lastdate_ = ui.get_date_from_input(
+                    "\n[>] Select the last available date for departure flight.", allow_skip=True)
+                fastmode_ = ui.yes_or_not(
+                    "\n[>] Do you want to execute script in fast mode?", allow_skip=True)
+                timeout_ = ui.get_integer(
+                    "\n[>] Default timeout between each search is 10 seconds.", allow_skip=True, allow_zero=False)
                 # If no limit is given, set lastdate to +1 year.
                 if not lastdate_:
                     lastdate_ = add_days(outbound_, 365)
@@ -242,12 +281,13 @@ if __name__ == "__main__":
                     'outbound': datetime_to_str(outbound_),
                     'delta': delta_,
                     'flexdays': flexdays_,
+                    'weekend': weekend_,
                     'lastdate': datetime_to_str(lastdate_),
                     'fastmode': fastmode_,
                     'timeout': timeout_
                 })
             # Print info about search configuration
-            print_search_info(from_, to_, outbound_, flexdays_,
+            print_search_info(from_, to_, outbound_, flexdays_, weekend_,
                               lastdate_, fastmode_, timeout_)
             # Prompt for start search, else go to begin
             if ui.yes_or_not("\n[>] Do you want to start search?"):
@@ -256,8 +296,8 @@ if __name__ == "__main__":
                 # Init the xpath scraper driver
                 scraper = XpathScraper(timeout=timeout_)
                 # Start search
-                start_search(from_, to_, outbound_,
-                             inbound_, flexdays_, lastdate_, fastmode_)
+                start_search(from_, to_, outbound_, inbound_, 
+                        flexdays_, lastdate_, fastmode_, weekend_)
                 # Quit the driver
                 scraper.quit()
             else:

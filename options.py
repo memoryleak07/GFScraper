@@ -50,6 +50,7 @@ DEFATULT_SETTINGS = '''
     "outbound": "2023-10-01",
     "delta": 20,
     "flexdays": 4,
+    "weekend": false,
     "lastdate": "2024-02-01",
     "fastmode": false,
     "timeout": 10,

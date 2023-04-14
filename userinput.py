@@ -19,6 +19,8 @@ class UserInput():
                     return False
                 elif allow_skip and choice == '' or choice in ['y', 'yes']:
                     return True
+            except KeyboardInterrupt:
+                exit()
             except ValueError:
                 print('Invalid date format, please try again.')
 
@@ -37,6 +39,8 @@ class UserInput():
                     print('Past dates are not allowed.')
                     continue
                 return date
+            except KeyboardInterrupt:
+                exit()
             except ValueError:
                 print('Invalid date format, please try again.')
 
@@ -53,6 +57,8 @@ class UserInput():
                     print("Input \'0\' is not allowed.")
                     continue
                 return int(choice)
+            except KeyboardInterrupt:
+                exit()
             except ValueError:
                 print('Invalid input, please enter an integer.')
 
@@ -103,6 +109,8 @@ class UserInput():
                                    for index in indices.split(',')]
                         selected_airports = result_df.iloc[indices]
                         break
+                    except KeyboardInterrupt:
+                        exit()
                     except (ValueError, IndexError):
                         print('Invalid input, please try again.')
                 # Look up the airport codes in the DataFrame print and append them
