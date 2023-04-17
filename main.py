@@ -65,7 +65,7 @@ def exit_app(message=None, filename=None):
     sys.exit(1)
 
 
-def add_days(date, delta: int):
+def add_days(date: str | datetime.datetime | datetime.date, delta: int):
     '''return always a datetime.date obj'''
     if isinstance(date, (datetime.datetime, datetime.date)):
         return date + datetime.timedelta(days=delta)
@@ -73,13 +73,13 @@ def add_days(date, delta: int):
         return (datetime.datetime.strptime(date, '%Y-%m-%d') + datetime.timedelta(days=delta)).date()
 
 
-def datetime_to_str(date):
+def datetime_to_str(date: datetime.datetime | datetime.date):
     if isinstance(date, (datetime.datetime, datetime.date)):
         date_str = date.strftime('%Y-%m-%d')
         return date_str
 
 
-def get_first_weekend_day(date:datetime.datetime|datetime.date):
+def get_first_weekend_day(date: datetime.datetime | datetime.date):
     day_of_week = date.weekday()
     if day_of_week == 5:  # Saturday
         first_day_of_weekend = date
@@ -185,13 +185,16 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
         for f in from_:
             for t in to_:
                 for i in range(period.days):
-                    # If many "date too far" break
+                    # If found too many "date too far" break loop
                     if len(not_found) >= 5:
                         not_found.clear()
                         break
+                    # Reset i_weekend counter
+                    if i == 0:
+                        i_weekend = 0
                     # Departure flight date is given by "outbound_" (date) + index (int) + index_weekend (int)
                     outbound_date = add_days(outbound_, i+i_weekend)
-                    # If weekend increment index i_weekend + 5
+                    # If weekend increment index i_weekend +5
                     if weekend:
                         outbound_date = get_first_weekend_day(
                             date=outbound_date)
@@ -296,11 +299,12 @@ if __name__ == "__main__":
                 # Init the xpath scraper driver
                 scraper = XpathScraper(timeout=timeout_)
                 # Start search
-                start_search(from_, to_, outbound_, inbound_, 
-                        flexdays_, lastdate_, fastmode_, weekend_)
+                start_search(from_, to_, outbound_, inbound_,
+                             flexdays_, lastdate_, fastmode_, weekend_)
                 # Quit the driver
                 scraper.quit()
             else:
                 continue
     except KeyboardInterrupt:
         exit_app('\n\nScript terminated by user.', filename)
+        
