@@ -12,7 +12,7 @@ from options import *
 # pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
 
 
-def print_welcome():
+def print_welcome_message():
     print(f'''
                 GoogleFlightsScraper 
                     version 1.1
@@ -192,14 +192,14 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
                     # Reset i_weekend counter
                     if i == 0:
                         i_weekend = 0
-                    # Departure flight date is given by "outbound_" (date) + index (int) + index_weekend (int)
+                    # Departure flight date is given by "outbound_" (date) + index (int) + (if True) index_weekend (int)
                     outbound_date = add_days(outbound_, i+i_weekend)
                     # If weekend increment index i_weekend +5
                     if weekend:
                         outbound_date = get_first_weekend_day(
                             date=outbound_date)
                         i_weekend += 5
-                    # Convert for scraper
+                    # Convert out and in dates for scraper
                     outbound_dt = datetime_to_str(outbound_date)
                     inbound_dt = datetime_to_str(
                         add_days(outbound_date, delta.days))
@@ -231,7 +231,8 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
 
 if __name__ == "__main__":
     ui = UserInput()
-    print_welcome()
+    today = datetime.datetime.now().date()
+    print_welcome_message()
     filename = None
     not_found = []
     from_ = []
@@ -251,6 +252,9 @@ if __name__ == "__main__":
                 lastdate_ = add_days(data['lastdate'], 0)
                 fastmode_ = data['fastmode']
                 timeout_ = data['timeout']
+                # Check datetime inputs
+                if outbound_ < today or lastdate_ < today:
+                    raise ValueError("\n[Error] Past dates are not allowed in settings.json file.")
             else:
                 # Prompt user to enter data for search
                 from_ = ui.select_airport(
@@ -307,4 +311,5 @@ if __name__ == "__main__":
                 continue
     except KeyboardInterrupt:
         exit_app('\n\nScript terminated by user.', filename)
-        
+    except Exception as e:
+        exit_app(str(e), filename)
