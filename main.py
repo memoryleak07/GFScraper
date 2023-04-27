@@ -7,7 +7,7 @@ from datetime import timedelta
 from userinput import *
 from xpathscraper import XpathScraper
 from options import *
-# from readresults import ReadCSVResult
+from reader import ReadResult
 # embed file to the exe
 # pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
 
@@ -15,10 +15,11 @@ from options import *
 def print_welcome_message():
     print(f'''
                 GoogleFlightsScraper 
-                    version 1.1
+                     version 1.2
+                AVOLOAVOLO.it TRIBUTE
                      fly high
                      
-                Press CTRL+C to exit
+                Press CTRL+C to exit.
           ''')
 
 
@@ -27,7 +28,7 @@ def update_settings_file(data: dict):
         with open(settings_file, "w", encoding='utf-8') as f:
             json.dump(data, f, indent=4)
     except Exception as e:
-        raise (f'Error: {e}')
+        raise (f'[ERROR] {e}')
 
 
 def read_settings_file():
@@ -37,7 +38,7 @@ def read_settings_file():
             for d in data:
                 if data[d] in ("", " ", []):
                     print(
-                        f"[Exception] No value in \'{d}\' of JSON settings file")
+                        f"[EXCEPTION] No value in \'{d}\' of JSON settings file")
                     raise json.JSONDecodeError("", "", 0)
             return data
     except FileNotFoundError:
@@ -46,23 +47,40 @@ def read_settings_file():
             f.seek(0)
             return json.load(f)
     except json.JSONDecodeError:
-        print("[Exception] JSON settings file not readable.")
+        print("[EXCEPTION] JSON settings file not readable.")
         if ui.yes_or_not("Do you want to restore default settings?"):
             os.remove(settings_file)
             return read_settings_file()
         exit_app(
-            message=f'\n[Error] Script terminated. Please fix JSON settings file or restore to default settings.')
+            message=f'\n[ERROR] Script terminated. Please fix JSON settings file or restore to default settings.')
     except Exception as e:
-        exit_app(message=f'[Error] {e}')
+        exit_app(message=f'[ERROR] {e}')
 
 
 def exit_app(message=None, filename=None):
     if message:
         print(message)
     if filename and is_file_not_empty(filename):
-        print(f'\n[-] Results file name: {filename}\n')
-    print("\nExiting.")
+        read_final_result(filename)
+    print("\n[INFO] Exiting.")
     sys.exit(1)
+
+
+def read_final_result(filename):
+    try:
+        reader = ReadResult(filename)
+        # Sort dataframe by price
+        sorted_df = reader.sort_by_price()
+        # New file_name
+        new_filename = f'{filename}_SORTED.xlsx'
+        # Export to XLSX
+        sorted_df.to_excel(new_filename, index=False)
+        # Completed
+        print(f'\n[-] Raw CSV file is: {filename}')
+        print(f'\n[-] Sorted XLSX file is: {new_filename}')
+    except Exception as e:
+        print(f'{e}')
+
 
 
 def add_days(date: str | datetime.datetime | datetime.date, delta: int):
@@ -74,12 +92,14 @@ def add_days(date: str | datetime.datetime | datetime.date, delta: int):
 
 
 def datetime_to_str(date: datetime.datetime | datetime.date):
+    '''from datetime|date to str'''
     if isinstance(date, (datetime.datetime, datetime.date)):
         date_str = date.strftime('%Y-%m-%d')
         return date_str
 
 
 def get_first_weekend_day(date: datetime.datetime | datetime.date):
+    '''return first Saturday from given day'''
     day_of_week = date.weekday()
     if day_of_week == 5:  # Saturday
         first_day_of_weekend = date
@@ -93,6 +113,7 @@ def get_first_weekend_day(date: datetime.datetime | datetime.date):
 
 
 def url_builder(from_: str, to_: str, outbound_: str, inbound_: str, tclass: str = None):
+    '''build url for request'''
     base_url = f'https://www.google.com/travel/flights?q=Flights+to+{to_}+from+{from_}+on+{outbound_}+through+{inbound_}'
     if tclass in ['first', 'business', 'economy']:
         base_url = f'{base_url}%20{tclass}%20class'
@@ -158,7 +179,7 @@ def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, t
             not_found.append(1)
             return format_result(outbound_, inbound_, [f'{from_}-{to_}'] + results)
         else:
-            # Clean too_far list
+            # Clear too_far list
             not_found.clear()
         # Check if fast mode skip inbound flight information (duration, stops)
         if fast:
@@ -169,7 +190,7 @@ def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, t
         results = results + scraper.get_elements_from_xpath_list(
             new_url, XPATH_LIST)
     except Exception as e:
-        results = results + ['Exception', f'{e.__class__}']
+        results = results + ['[EXCEPTION]', f'{e.__class__}']
     # Return a unique list with outbound and inbound flights information or about non-exit exception
     return format_result(outbound_, inbound_, results)
 
@@ -185,8 +206,9 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
         for f in from_:
             for t in to_:
                 for i in range(period.days):
-                    # If found too many "date too far" break loop
+                    # If found too many not found break loop
                     if len(not_found) >= 5:
+                        print("[INFO] Skipping because too many search with no result.")
                         not_found.clear()
                         break
                     # Reset i_weekend counter
@@ -254,7 +276,7 @@ if __name__ == "__main__":
                 timeout_ = data['timeout']
                 # Check datetime inputs
                 if outbound_ < today or lastdate_ < today:
-                    raise ValueError("\n[Error] Past dates are not allowed in settings.json file.")
+                    raise ValueError("\n[ERROR] Past dates are not allowed in settings.json file.")
             else:
                 # Prompt user to enter data for search
                 from_ = ui.select_airport(
@@ -307,9 +329,11 @@ if __name__ == "__main__":
                              flexdays_, lastdate_, fastmode_, weekend_)
                 # Quit the driver
                 scraper.quit()
+                # Sort:
+                read_final_result(filename)
             else:
                 continue
-    except KeyboardInterrupt:
-        exit_app('\n\nScript terminated by user.', filename)
+    except (KeyboardInterrupt):
+        exit_app('\n\n[INFO] Script terminated by user.', filename)
     except Exception as e:
         exit_app(str(e), filename)

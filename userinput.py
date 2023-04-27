@@ -12,24 +12,24 @@ class UserInput():
         print(message)
         if allow_skip:
             prompt = f'{prompt} (press enter to skip): '
-        while True:
-            try:
+        try:
+            while True:
                 choice = input(prompt).lower()
                 if choice in ['n', 'no']:
                     return False
                 elif allow_skip and choice == '' or choice in ['y', 'yes']:
                     return True
-            except KeyboardInterrupt:
-                exit()
-            except ValueError:
-                print('Invalid date format, please try again.')
+        except (KeyboardInterrupt, EOFError):
+            exit()
+        except ValueError:
+            print('Invalid date format, please try again.')
 
     def get_date_from_input(self, message, prompt='Enter a date in the format yyyy-mm-dd: ', allow_skip=False, allow_past_date=False):
         print(message)
         if allow_skip:
             prompt = f'{prompt} (press enter to skip): '
-        while True:
-            try:
+        try:
+            while True:
                 date_str = input(prompt)
                 if allow_skip and not date_str:
                     return None
@@ -39,17 +39,17 @@ class UserInput():
                     print('Past dates are not allowed.')
                     continue
                 return date
-            except KeyboardInterrupt:
-                exit()
-            except ValueError:
-                print('Invalid date format, please try again.')
+        except (KeyboardInterrupt, EOFError):
+            exit()
+        except ValueError:
+            print('Invalid date format, please try again.')
 
     def get_integer(self, message, prompt="Enter an integer: ", allow_skip=False, allow_zero=True):
         print(message)
         if allow_skip:
             prompt = f'{prompt} (press enter to skip): '
-        while True:
-            try:
+        try:
+            while True:
                 choice = input(prompt)
                 if allow_skip and choice == '':
                     return None
@@ -57,10 +57,10 @@ class UserInput():
                     print("Input \'0\' is not allowed.")
                     continue
                 return int(choice)
-            except KeyboardInterrupt:
-                exit()
-            except ValueError:
-                print('Invalid input, please enter an integer.')
+        except (KeyboardInterrupt, EOFError):
+            exit()
+        except ValueError:
+            print('Invalid input, please enter an integer.')
 
 
     def select_airport(self, message):
@@ -127,6 +127,20 @@ class UserInput():
                 # Finally return airport codes
                 return codes
 
+    def get_comma_list(self, message, prompt='Enter a comma-separated list of indices: ', allow_skip=False):
+        print(message)
+        if allow_skip:
+            prompt = f'{prompt} (press enter to skip): '
+        try:
+            while True:
+                indices = input(prompt)
+                indices = [int(index.strip())
+                           for index in indices.split(',')]
+                return indices
+        except (ValueError, IndexError):
+            print('Invalid input, please try again.')
+
+
     # def select_days_number(self, message, prompt='Enter the total number of nights: '):
     #     print(message)
     #     while True:
@@ -146,17 +160,3 @@ class UserInput():
     #             return int(choice)
     #         except ValueError:
     #             print('Invalid input, please enter an integer.')
-
-
-    def get_comma_list(self, message, prompt='Enter a comma-separated list of indices: ', allow_skip=False):
-        print(message)
-        if allow_skip:
-            prompt = f'{prompt} (press enter to skip): '
-        while True:
-            try:
-                indices = input(prompt)
-                indices = [int(index.strip())
-                           for index in indices.split(',')]
-                return indices
-            except (ValueError, IndexError):
-                print('Invalid input, please try again.')

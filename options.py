@@ -52,7 +52,7 @@ DEFATULT_SETTINGS = '''
     "flexdays": 4,
     "weekend": false,
     "lastdate": "2024-02-01",
-    "fastmode": false,
+    "fastmode": true,
     "timeout": 10,
     "tclass": [
         "economy",

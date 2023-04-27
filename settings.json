@@ -1,11 +1,11 @@
 {
     "from": ["NAP"],
     "to": ["VIE", "IST", "LIS"],
-    "outbound": "2023-04-15",
+    "outbound": "2023-04-26",
     "delta": 2,
     "flexdays": 1,
     "weekend": true,
-    "lastdate": "2024-04-15",
+    "lastdate": "2024-01-15",
     "fastmode": true,
     "timeout": 10
 }

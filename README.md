@@ -1,7 +1,13 @@
-# GoogleFlightsScraper 1.1
+# GoogleFlightsScraper 1.2
 
-Scraper di voli per GoogleFlights.
+Scraper di voli per GoogleFlights.  [AVOLOAVOLO.it TRIBUTE]
+
 Permette la ricerca di informazioni sui voli andata e ritorno data una lista di aeroporti di partenza ed una lista di aeroporti di destinazione. È necessario selezionare il primo giorno utile per la partenza ed il totale dei giorni prima del volo di ritorno. Tutti gli altri parametri sono opzionali. I risultati della ricerca è salvato in un file CSV.
+
+Lo script prevede due opzioni per passare i parametri della ricerca:
+
+* Tramite il file "settings.json".
+* Tramite inputs da tastiera.
 
 ## Esempio parametri di default
 
@@ -46,6 +52,8 @@ Permette la ricerca di informazioni sui voli andata e ritorno data una lista di 
 Facendo riferimento all'esempio sopra riportato l'applicazione effettuerà questo tipo di ricerca:
 
 Proverà tutte le combinazioni dalla lista di aeroporti di partenza "from" alla lista di aeroporti di destinazione "to", con un intervallo di 20 giorni ("delta") tra il volo di andata ("outbound") ed il volo di ritorno. Flessibile sul ritorno di +3 giorni ("flexdays"). Lo script si ferma quando tutte le combinazioni tra aeroporti e date sono terminate oppure se la data di partenza dell'ultima combinazione della lista di aeroporti è uguale a "lastdate".
+
+I risultati vengono salvati progressivamente in un file CSV. Al termine della ricerca (o alla pressione di CTRL+C) il file viene ordinato per prezzo e si salva una copia in formato XLSX.
 
 ## Contributing
 

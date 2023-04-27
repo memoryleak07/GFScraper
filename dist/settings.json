@@ -1,0 +1,23 @@
+{
+    "from": [
+        "FCO",
+        "NAP"
+    ],
+    "to": [
+        "MDE",
+        "BOG",
+        "CTG"
+    ],
+    "outbound": "2023-10-01",
+    "delta": 20,
+    "flexdays": 4,
+    "weekend": false,
+    "lastdate": "2024-02-01",
+    "fastmode": true,
+    "timeout": 10,
+    "tclass": [
+        "economy",
+        "business",
+        "first"
+    ]
+}
