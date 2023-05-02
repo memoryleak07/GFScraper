@@ -1,3 +1,4 @@
+import sys
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -6,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException, NoSuchWindowException, TimeoutException,StaleElementReferenceException
+from base_logger import logger
 
 IGNORED_EXCEPTION = (NoSuchElementException,TimeoutException,StaleElementReferenceException)
 # options.add_argument('log-level=3') 
@@ -60,10 +62,10 @@ class XpathScraper:
             )
             return element.text
         except (NoSuchElementException,TimeoutException,StaleElementReferenceException) as e:
-            print(e.msg)
+            logger.error(e.msg)
         except (NoSuchWindowException) as e:
-            print(e.msg)
-            exit()    
+            logger.error(e.msg)
+            sys.exit()    
         
 
     def get_elements_from_xpath_list(self, url:str, xpath_list:list):
@@ -77,10 +79,10 @@ class XpathScraper:
                 )
                 element_text_list.append(element.text)
         except (NoSuchElementException,TimeoutException,StaleElementReferenceException) as e:
-            print(e.msg)
+            logger.error(e.msg)
         except (NoSuchWindowException) as e:
-            print(e.msg)
-            exit()
+            logger.error(e.msg)
+            sys.exit()
         return element_text_list
 
 
@@ -94,9 +96,9 @@ class XpathScraper:
             element.click()
             return element.parent.current_url
         except (NoSuchElementException,TimeoutException,StaleElementReferenceException) as e:
-            print(e.msg)   
+            logger.error(e.msg)   
         except (NoSuchWindowException) as e:
-            print(e.msg)   
+            logger.error(e.msg)   
 
     def click(self, url:str, xpath:str):
         if url:
@@ -108,9 +110,9 @@ class XpathScraper:
             element.click()
             return element.parent.current_url
         except (NoSuchElementException,TimeoutException,StaleElementReferenceException) as e:
-            print(e.msg)   
+            logger.error(e.msg)   
         except (NoSuchWindowException) as e:
-            print(e.msg)     
+            logger.error(e.msg)     
 
     def input_text(self, url:str, xpath:str, text:str):
         if url:
@@ -121,6 +123,6 @@ class XpathScraper:
             )
             element.send_keys(text)
         except (NoSuchElementException,TimeoutException,StaleElementReferenceException) as e:
-            print(e.msg)   
+            logger.error(e.msg)   
         except (NoSuchWindowException) as e:
-            print(e.msg)
+            logger.error(e.msg)

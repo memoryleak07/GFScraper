@@ -10,64 +10,37 @@ from options import *
 from reader import ReadResult
 # embed file to the exe
 # pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
+from base_logger import logger
+
+
+# from wakepy import set_keepawake, unset_keepawake
 
 
 def print_welcome_message():
-    print(f'''
+    logger.info(f'''
                 GoogleFlightsScraper 
-                     version 1.2
+                     version 1.3
                 AVOLOAVOLO.it TRIBUTE
-                     fly high
+                      fly high
                      
                 Press CTRL+C to exit.
           ''')
 
-
-def update_settings_file(data: dict):
-    try:
-        with open(settings_file, "w", encoding='utf-8') as f:
-            json.dump(data, f, indent=4)
-    except Exception as e:
-        raise (f'[ERROR] {e}')
-
-
-def read_settings_file():
-    try:
-        with open(settings_file, 'r') as f:
-            data = json.load(f)
-            for d in data:
-                if data[d] in ("", " ", []):
-                    print(
-                        f"[EXCEPTION] No value in \'{d}\' of JSON settings file")
-                    raise json.JSONDecodeError("", "", 0)
-            return data
-    except FileNotFoundError:
-        with open(settings_file, 'w+', encoding='utf-8') as f:
-            json.dump(json.loads(DEFATULT_SETTINGS), f, indent=4)
-            f.seek(0)
-            return json.load(f)
-    except json.JSONDecodeError:
-        print("[EXCEPTION] JSON settings file not readable.")
-        if ui.yes_or_not("Do you want to restore default settings?"):
-            os.remove(settings_file)
-            return read_settings_file()
-        exit_app(
-            message=f'\n[ERROR] Script terminated. Please fix JSON settings file or restore to default settings.')
-    except Exception as e:
-        exit_app(message=f'[ERROR] {e}')
-
-
-def exit_app(message=None, filename=None):
+def exit_app(message=None, filename=None, error=False):
     if message:
-        print(message)
+        if error:
+            logger.error(message)
+        else:
+            logger.info(message)
     if filename and is_file_not_empty(filename):
         read_final_result(filename)
-    print("\n[INFO] Exiting.")
+    logger.info('Exiting."')
     sys.exit(1)
 
 
 def read_final_result(filename):
     try:
+        logger.info(f'Raw CSV file is: {filename}')
         reader = ReadResult(filename)
         # Sort dataframe by price
         sorted_df = reader.sort_by_price()
@@ -76,11 +49,9 @@ def read_final_result(filename):
         # Export to XLSX
         sorted_df.to_excel(new_filename, index=False)
         # Completed
-        print(f'\n[-] Raw CSV file is: {filename}')
-        print(f'\n[-] Sorted XLSX file is: {new_filename}')
+        logger.info(f'Sorted XLSX file is: {new_filename}')
     except Exception as e:
-        print(f'{e}')
-
+        logger.exception(e)
 
 
 def add_days(date: str | datetime.datetime | datetime.date, delta: int):
@@ -121,8 +92,9 @@ def url_builder(from_: str, to_: str, outbound_: str, inbound_: str, tclass: str
 
 
 def print_search_info(from_, to_, outbound_, flexdays_, weekend_, lastdate_, fastmode_, timeout_):
-    print(f'''
-          From {from_} to {to_}
+    logger.info(f'''
+          From: {from_} 
+          To: {to_}
           Departure: {outbound_}
           Days: {delta_}
           Flexibility: {flexdays_}
@@ -135,7 +107,7 @@ def print_search_info(from_, to_, outbound_, flexdays_, weekend_, lastdate_, fas
 
 def print_end_info(start_time: datetime, end_time: datetime, count: int):
     time_elapsed = end_time - start_time
-    print(f'''
+    logger.info(f'''
           Start at: {start_time}
           End at: {end_time}
           Time elapsed: {time_elapsed}
@@ -153,7 +125,7 @@ def add_list_to_csv_file(my_list: list, filename: str):
             writer = csv.writer(file)
             writer.writerow(my_list)
     except Exception as e:
-        print(f'{e}')
+        logger.exception(e)
 
 
 def format_result(outbound_: str, inbound_: str, results: list):
@@ -161,7 +133,7 @@ def format_result(outbound_: str, inbound_: str, results: list):
     results = [outbound_, inbound_] + results
     # Replace newline characters with /
     results = [str(s).replace('\n', '/') for s in results]
-    print(results)
+    logger.info(results)
     return results
 
 
@@ -208,7 +180,7 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
                 for i in range(period.days):
                     # If found too many not found break loop
                     if len(not_found) >= 5:
-                        print("[INFO] Skipping because too many search with no result.")
+                        logger.info("Skipping because too many search with no result.")
                         not_found.clear()
                         break
                     # Reset i_weekend counter
@@ -245,6 +217,7 @@ def start_search(from_: list, to_: list, outbound_: datetime, inbound_: datetime
                             # Count +1
                             count += 1
     except KeyboardInterrupt:
+        logger.info('User has pressed CTRL+C.')
         pass
     finally:
         end_time = datetime.datetime.now()
@@ -333,7 +306,8 @@ if __name__ == "__main__":
                 read_final_result(filename)
             else:
                 continue
-    except (KeyboardInterrupt):
-        exit_app('\n\n[INFO] Script terminated by user.', filename)
+    except KeyboardInterrupt:
+        exit_app('Script terminated by user.', filename)
     except Exception as e:
-        exit_app(str(e), filename)
+        logger.exception(e)
+        exit_app(e, filename, error=True)

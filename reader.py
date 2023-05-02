@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from base_logger import logger
 # from options import XPATH_KEYS
 KEYS = ['outbound', 'inbound', 'codes', 'price', 'company', 'info', 'duration', 'stops']
 
@@ -24,7 +25,10 @@ class ReadResult():
             elif pd.isna(s):
                 return 0
             else:
-                return int(s)
+                try:
+                    return int(s)
+                except:
+                    return 0
         self.df[col_name] = self.df[col_name].fillna('0 €')
         self.df[col_name] = self.df[col_name].apply(extract_price)
         sorted_df = self.df[self.df[col_name] != 0].sort_values(col_name)
