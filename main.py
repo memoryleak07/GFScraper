@@ -1,30 +1,24 @@
 import csv
 import os
 import sys
-import json
 import datetime
-from datetime import timedelta
 from userinput import *
 from xpathscraper import XpathScraper
 from options import *
 from reader import ReadResult
+from base_logger import logger
 # embed file to the exe
 # pyinstaller --onefile --console --add-data='airport_codes.xls.xlsx;.' main.py
-from base_logger import logger
-
-
-# from wakepy import set_keepawake, unset_keepawake
-
 
 def print_welcome_message():
-    logger.info(f'''
-                GoogleFlightsScraper 
-                     version 1.3
-                AVOLOAVOLO.it TRIBUTE
-                      fly high
-                     
-                Press CTRL+C to exit.
-          ''')
+    logger.info(f'''\n
+            GoogleFlightsScraper 
+                 version 1.3
+            AVOLOAVOLO.it TRIBUTE
+                  fly high
+                 
+            Press CTRL+C to exit.
+            ''')
 
 def exit_app(message=None, filename=None, error=False):
     if message:
@@ -92,7 +86,7 @@ def url_builder(from_: str, to_: str, outbound_: str, inbound_: str, tclass: str
 
 
 def print_search_info(from_, to_, outbound_, flexdays_, weekend_, lastdate_, fastmode_, timeout_):
-    logger.info(f'''
+    logger.info(f'''\n
           From: {from_} 
           To: {to_}
           Departure: {outbound_}
@@ -107,7 +101,7 @@ def print_search_info(from_, to_, outbound_, flexdays_, weekend_, lastdate_, fas
 
 def print_end_info(start_time: datetime, end_time: datetime, count: int):
     time_elapsed = end_time - start_time
-    logger.info(f'''
+    logger.info(f'''\n
           Start at: {start_time}
           End at: {end_time}
           Time elapsed: {time_elapsed}

@@ -20,19 +20,19 @@ class ReadResult():
         
     def sort_by_price(self, col_name='price'):
         def extract_price(s):
-            if isinstance(s, str):
-                return int(float((s.split(' ')[0]).replace('.','')))
-            elif pd.isna(s):
-                return 0
-            else:
-                try:
-                    return int(s)
-                except:
+            try:
+                if isinstance(s, str):
+                    return int(float((s.split(' ')[0]).replace('.','')))
+                elif pd.isna(s):
                     return 0
+                else:
+                    return int(s)
+            except:
+                return 0
         self.df[col_name] = self.df[col_name].fillna('0 €')
         self.df[col_name] = self.df[col_name].apply(extract_price)
         sorted_df = self.df[self.df[col_name] != 0].sort_values(col_name)
-        print(f'\nSorted by price:\n{sorted_df.head()}')
+        logger.info(f'Flights sorted by price:\n{sorted_df.head()}')
         return sorted_df
         
     def sort_by_duration(self, col_name='duration'):

@@ -2,21 +2,16 @@ import logging
 import logging.handlers
 import datetime
 import sys
-'''
-LOGGER SECTION
-'''
+
 today = datetime.date.today() 
 LOG_FILENAME = "GFScraper_{0}.log".format('%02d' % today.day) 
-#'testMonitoringLog_' +  '%02d' % today.day + '.log'
 # create logger with 'spam_application'
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
 # Add the log message handler to the logger
 handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=1048576, backupCount=5)
 handler2 = logging.StreamHandler(sys.stdout)
 handler2.setLevel(logging.INFO)
-
 logger.addHandler(handler)
 # create file handler which logs even debug messages
 # create console handler with a higher log level
@@ -29,6 +24,3 @@ handler2.setFormatter(formatter)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.addHandler(handler2)
-'''
-END LOGGER SECTION
-'''

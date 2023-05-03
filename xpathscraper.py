@@ -62,9 +62,9 @@ class XpathScraper:
             )
             return element.text
         except (NoSuchElementException,TimeoutException,StaleElementReferenceException) as e:
-            logger.error(e.msg)
+            logger.error(e.__class__)
         except (NoSuchWindowException) as e:
-            logger.error(e.msg)
+            logger.error(e.__class__)
             sys.exit()    
         
 
@@ -79,9 +79,9 @@ class XpathScraper:
                 )
                 element_text_list.append(element.text)
         except (NoSuchElementException,TimeoutException,StaleElementReferenceException) as e:
-            logger.error(e.msg)
+            logger.error(e.__class__)
         except (NoSuchWindowException) as e:
-            logger.error(e.msg)
+            logger.error(e.__class__)
             sys.exit()
         return element_text_list
 
