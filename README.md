@@ -1,44 +1,43 @@
-# GoogleFlightsScraper 1.2
+# GoogleFlightsScraper 1.5
 
-Scraper di voli per GoogleFlights.  [AVOLOAVOLO.it TRIBUTE]
+(AVOLOAVOLO.it TRIBUTE)
 
-Permette la ricerca di informazioni sui voli andata e ritorno data una lista di aeroporti di partenza ed una lista di aeroporti di destinazione. È necessario selezionare il primo giorno utile per la partenza ed il totale dei giorni prima del volo di ritorno. Tutti gli altri parametri sono opzionali. I risultati della ricerca è salvato in un file CSV.
+This simple python script scrape prices and informations about the first flight sorted on GoogleFlights and save data to CSV file.
 
-Lo script prevede due opzioni per passare i parametri della ricerca:
+From a given list of airport codes as departure flights and a list of ariport codes as arrival destinations, given the search date range the script will scrape all combination one by one and store the infromation.
 
-* Tramite il file "settings.json".
-* Tramite inputs da tastiera.
+The search parameters are in the settings.json file.
 
-## Esempio parametri di default
+## Example of settings.json
 
 ```json
 {
-    //Codici degli aeroporti di partenza
+    //Departure airport codes list
     "from": [
           "FCO",
           "NAP"
     ],
-    //Codici degli aeroporti di destinazione
+    //Arrival airport codes list
     "to": [
           "MED",
           "BOG",
           "CTG"
     ],
-    //Prima data utile per la partenza:
+    //First date for departure flight:
     "outbound": "2023-10-1",
-    //Numero di giorni:
+    //Number of days before return flight:
     "delta": 20,
-    //Giorni flessibili per il volo di ritorno:
+    //Day of flexibility for the return flight:
     "flexdays": 3,
-    //Cerca solo partenza nel weekend:
+    //Search only departure on Saturday:
     "weekend": false,
     //Ultima data utile per il volo di partenza:
     "lastdate": "2023-12-1",
-    //Se true non prende informazioni sulla durata e le fermate del volo di ritorno:
+    //If true does not click on first flight to save info about return flight:
     "fastmode": true, 
-    //Timeout elemento non trovato tra una ricerca e l'altra
+    //Timeout in secords for skip scrape if element not found 
     "timeout": 10,
-    //Classe - NON GESTITO 1.1:
+    //Class - NOT IMPLEMENTED 1.5
     "tclass": [
         "economy",
         "business",
@@ -46,20 +45,3 @@ Lo script prevede due opzioni per passare i parametri della ricerca:
   ]
 }
 ```
-
-## Funzionamento
-
-Facendo riferimento all'esempio sopra riportato l'applicazione effettuerà questo tipo di ricerca:
-
-Proverà tutte le combinazioni dalla lista di aeroporti di partenza "from" alla lista di aeroporti di destinazione "to", con un intervallo di 20 giorni ("delta") tra il volo di andata ("outbound") ed il volo di ritorno. Flessibile sul ritorno di +3 giorni ("flexdays"). Lo script si ferma quando tutte le combinazioni tra aeroporti e date sono terminate oppure se la data di partenza dell'ultima combinazione della lista di aeroporti è uguale a "lastdate".
-
-I risultati vengono salvati progressivamente in un file CSV. Al termine della ricerca (o alla pressione di CTRL+C) il file viene ordinato per prezzo e si salva una copia in formato XLSX.
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)

@@ -65,7 +65,9 @@ class XpathScraper:
             logger.error(e.__class__)
         except (NoSuchWindowException) as e:
             logger.error(e.__class__)
-            sys.exit()    
+            sys.exit()
+        except Exception as e:
+            logger.error(e.__class__) 
         
 
     def get_elements_from_xpath_list(self, url:str, xpath_list:list):
@@ -83,6 +85,8 @@ class XpathScraper:
         except (NoSuchWindowException) as e:
             logger.error(e.__class__)
             sys.exit()
+        except Exception as e:
+            logger.error(e.__class__) 
         return element_text_list
 
 
