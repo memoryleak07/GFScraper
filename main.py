@@ -13,7 +13,7 @@ from base_logger import logger
 def print_welcome_message():
     logger.info(f'''\n
             GoogleFlightsScraper 
-                 version 1.3
+                 version 1.5
             AVOLOAVOLO.it TRIBUTE
                   fly high
                  
@@ -145,7 +145,7 @@ def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, t
             not_found.append(1)
             return format_result(outbound_, inbound_, [f'{from_}-{to_}'] + results)
         else:
-            # Clear too_far list
+            # Clear not_found list
             not_found.clear()
         # Check if fast mode skip inbound flight information (duration, stops)
         if fast:
@@ -156,6 +156,7 @@ def scrape_go(from_: str, to_: str, outbound_: str, inbound_: str, fast=False, t
         results = results + scraper.get_elements_from_xpath_list(
             new_url, XPATH_LIST)
     except Exception as e:
+        not_found.append(1)
         results = results + ['[EXCEPTION]', f'{e.__class__}']
     # Return a unique list with outbound and inbound flights information or about non-exit exception
     return format_result(outbound_, inbound_, results)
