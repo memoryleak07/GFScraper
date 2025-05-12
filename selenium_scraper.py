@@ -77,6 +77,11 @@ class SeleniumScraper:
         chrome_options.add_argument("--disable-notifications")
         chrome_options.add_argument("--disable-popup-blocking")
 
+        # Set language to English
+        chrome_options.add_argument("--lang=en-US")
+        chrome_options.add_experimental_option('prefs', {
+            'intl.accept_languages': 'en,en_US',
+        })
         # Set user agent if provided
         if self.user_agent:
             chrome_options.add_argument(f"--user-agent={self.user_agent}")

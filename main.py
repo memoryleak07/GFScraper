@@ -9,27 +9,27 @@ from utils import *
 from logging_config import setup_logger
 
 logger = setup_logger('GFS')
-
-def extract_flight_data(scraper: SeleniumScraper) -> Dict[str, Any]:
-    """Extract and clean flight information from the current page."""
-    selectors = {
+SELECTORS = {
         "price": 'div.YMlIz.FpEdX > span',
         "airline": 'div.sSHqwe.tPgKwe.ogfYpf',
         "time": 'div.zxVSec.YMlIz.tPgKwe.ogfYpf > span',
         "duration": 'div.Ak5kof > div',
         "type": 'div.EfT7Ae.AdWm1c.tPgKwe > span'
     }
-    
+
+def extract_flight_data(scraper: SeleniumScraper, timestamp: float) -> Dict[str, Any]:
+    """Extract and clean flight information from the current page."""    
     results = {}
     scraper.accept_google_cookies()
-    for key, selector in selectors.items():
+    for key, selector in SELECTORS.items():
         elements = scraper.wait_for_elements(By.CSS_SELECTOR, selector)
         results[key] = [clean_text(elem.text) for elem in elements if elem.text]
-        # Take a screenshot for debugging or verification
-        # screenshot_path = scraper.take_screenshot(f"flight_results_{int(time.time())}.png")
-        # results[key]["screenshot"] = screenshot_path
-
-    return results
+           
+    screenshot = scraper.take_screenshot(f"screenshot_{timestamp}.png")   
+    return {
+        "values": results,
+        "screenshot": screenshot
+    }
 
 def process_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
     """
@@ -43,14 +43,18 @@ def process_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
     Returns:
         Dictionary containing the processing results
     """
+    timestamp = time.time()
     result = {
+        "status": "failed",
         "url": url["url"],
         "from": url["from"],
         "to": url["to"],
         "outbound": url["outbound"],
         "inbound": url["inbound"],
-        "timestamp": time.time(),
-        "status": "failed",
+        "timestamp": timestamp,
+        "duration": 0,
+        "attempts": 0,
+        "screenshot": None,
         "data": None,
         "error": None
     }
@@ -64,14 +68,18 @@ def process_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
             attempts += 1
             try:
                 # Run the complete scraping task using our generic scraper
-                scraping_result = scraper.run_scraping_task(url["url"], extract_flight_data)
+                scraping_result = scraper.run_scraping_task(
+                    url["url"], 
+                    lambda s: extract_flight_data(s, timestamp))
                 
                 # Check if the scraping was successful
                 if scraping_result["success"]:
                     result["status"] = "success"
-                    result["data"] = scraping_result["data"]
-                    success = True
+                    result["data"] = scraping_result["data"]["values"]
+                    result["screenshot"] = scraping_result["data"]["screenshot"]
+                    # Append the result to CSV
                     append_result_to_csv(result)
+                    success = True
                 else:
                     scraper.logger.warning(f"Attempt {attempts} failed: {scraping_result['error']}")
                     if attempts < max_retries:
@@ -85,11 +93,14 @@ def process_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
     
     # Include retry information
     result["attempts"] = attempts
+    result["duration"] = time.time() - timestamp
+    
+    # Append the result to JSON
     append_result_to_json(result)
 
     return result
 
-def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> List[Dict[str, Any]]:
+def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> Dict[str, Any]:
     """
     Process multiple URLs concurrently using ThreadPoolExecutor.
     
@@ -135,13 +146,13 @@ def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> List[Dic
         "average_time_per_url": duration / len(urls) if urls else 0
     }
     
-    return results, summary
+    return summary
 
 def main():
     # Example search parameters for flight URLs
     search_params = {
         "FromAirports": ["FCO", "NAP"],
-          "ToAirports": [
+        "ToAirports": [
             "AYT", # Antalya Airport (Turkish Riviera)
             "DLM", # Dalaman Airport (Turkish Riviera)
             "GZP", # Gazipaşa-Alanya Airport (Turkish Riviera)
@@ -162,10 +173,10 @@ def main():
     max_workers = 3
     
     logger.info(f"Starting concurrent scraping of {len(urls)} URLs with {max_workers} workers...")
-    results, summary = process_urls_concurrently(urls, max_workers=max_workers)
+    summary = process_urls_concurrently(urls, max_workers=max_workers)
     
     # Save results to file
-    save_results_to_json(results, summary)
+    save_summary_to_json(summary)
     
     # Print summary
     logger.info("\nScraping Summary:")
@@ -174,13 +185,6 @@ def main():
     logger.info(f"Failed: {summary['failed']}")
     logger.info(f"Total duration: {summary['total_duration_seconds']:.2f} seconds")
     logger.info(f"Average time per URL: {summary['average_time_per_url']:.2f} seconds")
-    
-    return results
 
 if __name__ == "__main__":
     main()
-
-# TODO:
-# - Add screenshots folder for debugging with timestamp
-# - Check timestamp in json and csv file
-# - When scraping ends, write the summery to json file
