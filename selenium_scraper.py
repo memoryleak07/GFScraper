@@ -55,6 +55,7 @@ class SeleniumScraper:
         self.user_agent = user_agent
         self.proxy = proxy
         self.download_path = download_path
+        self.screenshots_dir = "screenshots"
         self.logger = logger or setup_logger("Scraper")
 
     def initialize_driver(self):
@@ -92,7 +93,11 @@ class SeleniumScraper:
 
         # Set download directory if provided
         if self.download_path:
-            prefs = {"download.default_directory": self.download_path}
+            os.makedirs(self.download_path, exist_ok=True)
+            prefs = {
+                "download.default_directory": self.download_path,
+                "download.prompt_for_download": False,
+                }
             chrome_options.add_experimental_option("prefs", prefs)
 
         # Use custom binary location if provided
@@ -382,7 +387,8 @@ class SeleniumScraper:
             filename = f"screenshot_{timestamp}.png"
 
         try:
-            filepath = os.path.abspath(filename)
+            os.makedirs(self.screenshots_dir, exist_ok=True)
+            filepath = os.path.abspath(os.path.join(self.screenshots_dir, filename))
             self.driver.save_screenshot(filepath)
             self.logger.info(f"Screenshot saved to {filepath}")
             return filepath

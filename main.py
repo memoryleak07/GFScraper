@@ -9,6 +9,7 @@ from utils import *
 from logging_config import setup_logger
 
 logger = setup_logger('GFS')
+MAX_WORKERS = 5
 SELECTORS = {
         "price": 'div.YMlIz.FpEdX > span',
         "airline": 'div.sSHqwe.tPgKwe.ogfYpf',
@@ -17,6 +18,27 @@ SELECTORS = {
         "type": 'div.EfT7Ae.AdWm1c.tPgKwe > span'
     }
 
+def print_configurations(search_params, urls):
+    """Print the script configurations."""
+    logger.info("Configuration:")
+    logger.info(f"  From Airports       : {', '.join(search_params['FromAirports'])}")
+    logger.info(f"  To Airports         : {', '.join(search_params['ToAirports'])}")
+    logger.info(f"  First Departure Date: {search_params['FirstDepartureDate']}")
+    logger.info(f"  Last Departure Date : {search_params['LastDepartureDate']}")
+    logger.info(f"  How Many Days       : {search_params['HowManyDays']}")
+    logger.info(f"  Flex Days           : {search_params['FlexDays']}")
+    logger.info(f"  Only Weekend        : {search_params['OnlyWeekend']}")
+    logger.info(f"  Total Combinations (URLs to scrape): {len(urls)}")
+
+def print_summary(summary):
+    """Print the summary of the scraping process."""
+    logger.info("Summary:")
+    logger.info(f"  Total URLs          : {summary['total_urls']}")
+    logger.info(f"  Successful URLs     : {summary['successful']}")
+    logger.info(f"  Failed URLs         : {summary['failed']}")
+    logger.info(f"  Total Duration (s)  : {summary['total_duration_seconds']:.2f}")
+    logger.info(f"  Average Time/URL (s): {summary['average_time_per_url']:.2f}")
+    
 def extract_flight_data(scraper: SeleniumScraper, timestamp: float) -> Dict[str, Any]:
     """Extract and clean flight information from the current page."""    
     results = {}
@@ -111,6 +133,8 @@ def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> Dict[str
     Returns:
         List of result dictionaries for each URL
     """
+    logger.info("Starting scraping...")
+
     start_time = time.time()
     results = []
     
@@ -145,46 +169,44 @@ def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> Dict[str
         "total_duration_seconds": duration,
         "average_time_per_url": duration / len(urls) if urls else 0
     }
-    
+
+    logger.info("Scraping completed.")
     return summary
 
 def main():
-    # Example search parameters for flight URLs
     search_params = {
-        "FromAirports": ["FCO", "NAP"],
+        "FromAirports": ["FCO"],
         "ToAirports": [
             "AYT", # Antalya Airport (Turkish Riviera)
             "DLM", # Dalaman Airport (Turkish Riviera)
             "GZP", # Gazipaşa-Alanya Airport (Turkish Riviera)
             "BJV", # Milas-Bodrum Airport (Turkish Riviera)
             "RHO"  # Rhodes International Airport Diagoras (Greek Island of Rhodi)
+            "BOG", # El Dorado International Airport (Bogotá)
+            "MDE", # José María Córdova International Airport (Medellín)
+            "CLO", # Alfonso Bonilla Aragón International Airport (Cali)
+            "CTG", # Rafael Núñez International Airport (Cartagena)
+            "BAQ"  # Ernesto Cortissoz International Airport (Barranquilla)    
+            "CUN", # Cancún International Airport (Cancún, Mexico)
+            "SJU", # Luis Muñoz Marín International Airport (San Juan, Puerto Rico)
+            "GIG"  # Rio de Janeiro–Galeão International Airport (Rio de Janeiro, Brazil)
         ],
         "FirstDepartureDate": "2025-08-02",
         "LastDepartureDate": "2025-08-10",
-        "HowManyDays": 10,
+        "HowManyDays": 15,
         "FlexDays": 6,
         "OnlyWeekend": False
     }
 
-    # Generate URLs from the search parameters
     urls = generate_google_flight_urls(search_params)
+    
+    print_configurations(search_params, urls)
 
-    # Set the maximum number of concurrent workers
-    max_workers = 3
+    summary = process_urls_concurrently(urls, max_workers=MAX_WORKERS)
     
-    logger.info(f"Starting concurrent scraping of {len(urls)} URLs with {max_workers} workers...")
-    summary = process_urls_concurrently(urls, max_workers=max_workers)
-    
-    # Save results to file
     save_summary_to_json(summary)
-    
-    # Print summary
-    logger.info("\nScraping Summary:")
-    logger.info(f"Total URLs: {summary['total_urls']}")
-    logger.info(f"Successful: {summary['successful']}")
-    logger.info(f"Failed: {summary['failed']}")
-    logger.info(f"Total duration: {summary['total_duration_seconds']:.2f} seconds")
-    logger.info(f"Average time per URL: {summary['average_time_per_url']:.2f} seconds")
+
+    print_summary(summary)
 
 if __name__ == "__main__":
     main()

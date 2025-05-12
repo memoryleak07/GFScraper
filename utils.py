@@ -16,7 +16,7 @@ def clean_text(text: str) -> str:
     text = ' '.join(text.split()) # Normalize whitespace
     return text.strip()
 
-def save_summary_to_json(summary: Dict[str, Any], filename: str = "results.json"):
+def save_summary_to_json(summary: Dict[str, Any], filename: str = "summary.json"):
     """
     Save the scraping summary results to a JSON file.
     
