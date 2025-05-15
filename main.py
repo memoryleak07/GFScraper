@@ -1,4 +1,5 @@
 import time
+import threading
 import concurrent.futures
 from typing import List, Dict, Any
 from selenium.webdriver.common.by import By
@@ -9,6 +10,7 @@ from utils import *
 from logging_config import setup_logger
 
 logger = setup_logger('GFS')
+stop_event = threading.Event()
 MAX_WORKERS = 5
 SELECTORS = {
         "price": 'div.YMlIz.FpEdX > span',
@@ -80,7 +82,7 @@ def process_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
         "data": None,
         "error": None
     }
-    
+        
     # Create a new scraper instance for this thread
     with SeleniumScraper() as scraper:
         attempts = 0
@@ -88,6 +90,9 @@ def process_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
         
         while attempts < max_retries and not success:
             attempts += 1
+            if stop_event.is_set():
+                scraper.logger.warning("Stop event set. Exiting thread.")
+                return result
             try:
                 # Run the complete scraping task using our generic scraper
                 scraping_result = scraper.run_scraping_task(
@@ -141,27 +146,33 @@ def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> Dict[str
     # Using ThreadPoolExecutor to run tasks concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all URL processing tasks
-        future_to_url = {executor.submit(process_url, url): url for url in urls}
-        
-        # Process results as they complete
-        for future in concurrent.futures.as_completed(future_to_url):
-            url = future_to_url[future]
-            try:
-                result = future.result()
-                results.append(result)
-                logger.info(f"Completed: {url} - Status: {result['status']}")
-            except Exception as e:
-                logger.exception(f"Thread for URL {url} generated an exception: {e}")
-                results.append({
-                    "url": url, 
-                    "status": "exception", 
-                    "error": str(e)
-                })
+        future_to_url = {executor.submit(process_url, url): url for url in urls}        
+        try:
+            # Process results as they complete
+            for future in concurrent.futures.as_completed(future_to_url):
+                if stop_event.is_set(): 
+                    break
+                url = future_to_url[future]
+                try:
+                    result = future.result()
+                    results.append(result)
+                    logger.info(f"Completed: {url} - Status: {result['status']}")
+                except Exception as e:
+                    logger.exception(f"Thread for URL {url} generated an exception: {e}")
+                    results.append({
+                        "url": url, 
+                        "status": "exception", 
+                        "error": str(e)
+                    })
+        except KeyboardInterrupt:
+            logger.warning("Keyboard interrupt received, shutting down executor...")
+            stop_event.set()
+            executor.shutdown(wait=False, cancel_futures=True)
+            return
     
     # Add summary information
     end_time = time.time()
-    duration = end_time - start_time
-    
+    duration = end_time - start_time    
     summary = {
         "total_urls": len(urls),
         "successful": sum(1 for r in results if r["status"] == "success"),
@@ -181,12 +192,12 @@ def main():
             "DLM", # Dalaman Airport (Turkish Riviera)
             "GZP", # Gazipaşa-Alanya Airport (Turkish Riviera)
             "BJV", # Milas-Bodrum Airport (Turkish Riviera)
-            "RHO"  # Rhodes International Airport Diagoras (Greek Island of Rhodi)
+            "RHO", # Rhodes International Airport Diagoras (Greek Island of Rhodi)
             "BOG", # El Dorado International Airport (Bogotá)
             "MDE", # José María Córdova International Airport (Medellín)
             "CLO", # Alfonso Bonilla Aragón International Airport (Cali)
             "CTG", # Rafael Núñez International Airport (Cartagena)
-            "BAQ"  # Ernesto Cortissoz International Airport (Barranquilla)    
+            "BAQ", # Ernesto Cortissoz International Airport (Barranquilla)    
             "CUN", # Cancún International Airport (Cancún, Mexico)
             "SJU", # Luis Muñoz Marín International Airport (San Juan, Puerto Rico)
             "GIG"  # Rio de Janeiro–Galeão International Airport (Rio de Janeiro, Brazil)
@@ -198,15 +209,16 @@ def main():
         "OnlyWeekend": False
     }
 
-    urls = generate_google_flight_urls(search_params)
-    
-    print_configurations(search_params, urls)
-
-    summary = process_urls_concurrently(urls, max_workers=MAX_WORKERS)
-    
-    save_summary_to_json(summary)
-
-    print_summary(summary)
-
+    try:            
+        urls = generate_google_flight_urls(search_params)
+        print_configurations(search_params, urls)
+        summary = process_urls_concurrently(urls, max_workers=MAX_WORKERS)
+        if not summary: 
+            return
+        save_summary_to_json(summary)
+        print_summary(summary)       
+    except KeyboardInterrupt:
+        logger.warning("Process interrupted by user.")
+        
 if __name__ == "__main__":
     main()
