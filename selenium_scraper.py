@@ -18,6 +18,7 @@ from selenium.common.exceptions import (
 )
 from webdriver_manager.chrome import ChromeDriverManager
 
+import config
 from logging_config import setup_logger
 
 
@@ -55,7 +56,7 @@ class SeleniumScraper:
         self.user_agent = user_agent
         self.proxy = proxy
         self.download_path = download_path
-        self.screenshots_dir = "screenshots"
+        # self.screenshots_dir = "screenshots"
         self.logger = logger or setup_logger("Scraper")
 
     def initialize_driver(self):
@@ -387,11 +388,9 @@ class SeleniumScraper:
             filename = f"screenshot_{timestamp}.png"
 
         try:
-            os.makedirs(self.screenshots_dir, exist_ok=True)
-            filepath = os.path.abspath(os.path.join(self.screenshots_dir, filename))
-            self.driver.save_screenshot(filepath)
-            self.logger.info(f"Screenshot saved to {filepath}")
-            return filepath
+            self.driver.save_screenshot(filename)
+            self.logger.info(f"Screenshot saved to {filename}")
+            return filename
         except Exception as e:
             self.logger.warning(f"Error taking screenshot: {str(e)}")
             return None
