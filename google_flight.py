@@ -79,7 +79,7 @@ def generate_google_flight_urls(search_params, base_url=GOOGLE_FLIGHTS_BASE_URL)
     return urls
 
 
-def print_results(urls, max_urls=5):
+def print_urls_results(urls, max_urls=5):
     """
     Print the generated URLs in a readable format.
     
@@ -120,52 +120,11 @@ if __name__ == "__main__":
     search_params = {
         "FromAirports": ["FCO", "NAP", "TRN"],
         "ToAirports": [
-            ################### EUROPE #######################
             "AYT", # Antalya Airport (Turkish Riviera)
             "DLM", # Dalaman Airport (Turkish Riviera)
             "GZP", # Gazipaşa-Alanya Airport (Turkish Riviera)
             "BJV", # Milas-Bodrum Airport (Turkish Riviera)
             "RHO", # Rhodes International Airport Diagoras (Greek Island of Rhodi)
-            ################### AMERICA #######################
-            "BOG", # El Dorado International Airport (Bogotá)
-            "MDE", # José María Córdova International Airport (Medellín)
-            "CLO", # Alfonso Bonilla Aragón International Airport (Cali)
-            "CTG", # Rafael Núñez International Airport (Cartagena)
-            "BAQ", # Ernesto Cortissoz International Airport (Barranquilla)    
-            "CUN", # Cancún International Airport (Cancún, Mexico)
-            "SJU", # Luis Muñoz Marín International Airport (San Juan, Puerto Rico)
-            "GIG", # Rio de Janeiro–Galeão International Airport (Rio de Janeiro, Brazil)
-            "GRU", # São Paulo/Guarulhos–Governador André Franco Montoro International Airport (São Paulo, Brazil)
-            "SDU", # Santos Dumont Airport (Rio de Janeiro, Brazil)
-            ####################### ASIA #######################
-            "ICN", # Incheon International Airport (Seoul, South Korea)
-            "GMP", # Gimpo International Airport (Seoul, South Korea)
-            "PUS", # Gimhae International Airport (Busan, South Korea)
-            "CJU", # Jeju International Airport (Jeju, South Korea)
-            "DAD", # Da Nang International Airport (Da Nang, Vietnam)
-            "HAN", # Noi Bai International Airport (Hanoi, Vietnam)
-            "SGN", # Tan Son Nhat International Airport (Ho Chi Minh City, Vietnam)
-            "BKK", # Suvarnabhumi Airport (Bangkok, Thailand)
-            "DMK", # Don Mueang International Airport (Bangkok, Thailand)
-            "HKT", # Phuket International Airport (Phuket, Thailand)
-            "CNX", # Chiang Mai International Airport (Chiang Mai, Thailand)
-            "PEK", # Beijing Capital International Airport (Beijing, China)
-            "PVG", # Shanghai Pudong International Airport (Shanghai, China)
-            "CAN", # Guangzhou Baiyun International Airport (Guangzhou, China)
-            "HGH", # Hangzhou Xiaoshan International Airport (Hangzhou, China)
-            "CTU", # Chengdu Shuangliu International Airport (Chengdu, China)
-            "NRT", # Narita International Airport (Tokyo, Japan)
-            "HND", # Haneda Airport (Tokyo, Japan)
-            "KIX", # Kansai International Airport (Osaka, Japan)
-            "NGO", # Chubu Centrair International Airport (Nagoya, Japan)
-            "FUK", # Fukuoka Airport (Fukuoka, Japan) 
-            "CMB", # Bandaranaike International Airport (Colombo, Sri Lanka)
-            "MRIA", # Mattala Rajapaksa International Airport (Hambantota, Sri Lanka)
-            "MNL", # Ninoy Aquino International Airport (Manila, Philippines)
-            "CEB", # Mactan-Cebu International Airport (Cebu, Philippines)
-            "DVO", # Francisco Bangoy International Airport (Davao, Philippines)
-            "PPS", # Puerto Princesa International Airport (Palawan, Philippines)
-            "CRK", # Clark International Airport (Angeles/Mabalacat, Philippines)
         ],
         "FirstDepartureDate": "2025-08-02",
         "LastDepartureDate": "2025-08-10",
@@ -175,5 +134,5 @@ if __name__ == "__main__":
     }
     
     urls = generate_google_flight_urls(search_params)
-    print_results(urls, 5)
+    print_urls_results(urls, 5)
     save_results_to_json(urls)

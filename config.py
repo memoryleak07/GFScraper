@@ -1,6 +1,3 @@
-import os
-
-# Global variables
 CURRENT_RESULTS_FOLDER = None
 
 def init():

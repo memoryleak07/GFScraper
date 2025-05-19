@@ -147,7 +147,7 @@ def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> List[Dic
     """
     logger.info("Starting scraping...")
     results = []
-
+    processed_urls = 0
     # Using ThreadPoolExecutor to run tasks concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all URL processing tasks
@@ -166,7 +166,10 @@ def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> List[Dic
                 finally:
                     save_worker_result(result)
                     results.append(result)
+                    processed_urls += 1
                     logger.info(f"Thread for URL {url} completed. Status: {result['status']}")
+                    logger.info(f"Processed: {processed_urls}/{len(urls)} - Remaining: {len(urls) - processed_urls}")
+
         except KeyboardInterrupt:
             logger.warning("Keyboard interrupt received, shutting down executor...")
             stop_event.set()
@@ -183,49 +186,69 @@ def save_worker_result(result: Dict[str, Any]) -> None:
 
 def main():
     search_params = {
-        "FromAirports": ["FCO", "NAP", "TRN"],
-        "ToAirports": [
-            ################### EUROPE #######################
-            "AYT", # Antalya Airport (Turkish Riviera)
-            "DLM", # Dalaman Airport (Turkish Riviera)
-            "GZP", # Gazipaşa-Alanya Airport (Turkish Riviera)
-            "BJV", # Milas-Bodrum Airport (Turkish Riviera)
-            "RHO", # Rhodes International Airport Diagoras (Greek Island of Rhodi)
-            ################### AMERICA #######################
-            "BOG", # El Dorado International Airport (Bogotá)
-            "MDE", # José María Córdova International Airport (Medellín)
-            "CLO", # Alfonso Bonilla Aragón International Airport (Cali)
-            "CTG", # Rafael Núñez International Airport (Cartagena)
-            "BAQ", # Ernesto Cortissoz International Airport (Barranquilla)    
-            "CUN", # Cancún International Airport (Cancún, Mexico)
-            "SJU", # Luis Muñoz Marín International Airport (San Juan, Puerto Rico)
-            "SJO", # Santamaría International Airport (San José, Costa Rica)
-            "GIG", # Rio de Janeiro–Galeão International Airport (Rio de Janeiro, Brazil)
-            "GRU", # São Paulo/Guarulhos–Governador André Franco Montoro International Airport (São Paulo, Brazil)
-            ####################### ASIA #######################
-            "ICN", # Incheon International Airport (Seoul, South Korea)
-            "GMP", # Gimpo International Airport (Seoul, South Korea)
-            "PUS", # Gimhae International Airport (Busan, South Korea)
-            "DAD", # Da Nang International Airport (Da Nang, Vietnam)
-            "HAN", # Noi Bai International Airport (Hanoi, Vietnam)
-            "SGN", # Tan Son Nhat International Airport (Ho Chi Minh City, Vietnam)
-            "BKK", # Suvarnabhumi Airport (Bangkok, Thailand)
-            "DMK", # Don Mueang International Airport (Bangkok, Thailand)
-            "HKT", # Phuket International Airport (Phuket, Thailand)
-            "CNX", # Chiang Mai International Airport (Chiang Mai, Thailand)
-            "PEK", # Beijing Capital International Airport (Beijing, China)
-            "PVG", # Shanghai Pudong International Airport (Shanghai, China)
-            "CAN", # Guangzhou Baiyun International Airport (Guangzhou, China)
-            "HGH", # Hangzhou Xiaoshan International Airport (Hangzhou, China)
-            "CTU", # Chengdu Shuangliu International Airport (Chengdu, China)
-            "HND", # Haneda Airport (Tokyo, Japan)
-            "KIX", # Kansai International Airport (Osaka, Japan)
-            "CMB", # Bandaranaike International Airport (Colombo, Sri Lanka)
-            "MNL", # Ninoy Aquino International Airport (Manila, Philippines)
-            "CEB", # Mactan-Cebu International Airport (Cebu, Philippines)
-            "DVO", # Francisco Bangoy International Airport (Davao, Philippines)
+        "FromAirports": [
+            "FCO",  # Roma-Fiumicino (hub internazionale, voli diretti annuali/stagionali)
+            "NAP",  # Napoli-Capodichino (voli stagionali estivi)
+            "MXP",  # Milano-Malpensa (voli diretti annuali e stagionali)
+            "LIN",  # Milano-Linate (voli stagionali estivi)
+            "BLQ",  # Bologna (voli stagionali)
+            "VCE",  # Venezia-Marco Polo (voli stagionali estivi)
+            "TRN",  # Torino-Caselle (voli charter/estivi)
+            "BGY",  # Bergamo-Orio al Serio (voli low-cost stagionali)
+            "PSA",  # Pisa (voli charter/estivi)
+            "GOA",  # Genova (voli stagionali limitati)
+            # "PMO",  # Palermo (voli stagionali estivi)
+            # "CTA",  # Catania (voli estivi)
+            # "BRI",  # Bari (voli charter/estivi)
         ],
-        "FirstDepartureDate": "2025-08-02",
+        "ToAirports": [
+            # ################### EUROPE #######################
+            "AYT", # Antalya Airport (Antalya, Turkey)
+            "DLM", # Dalaman Airport (Dalaman, Turkey)
+            "GZP", # Gazipaşa-Alanya Airport (Gazipaşa, Turkey)
+            "BJV", # Milas-Bodrum Airport (Bodrum, Turkey)
+            "ADA", # Adnan Menderes Airport (Izmir, Turkey)
+            # "RHO", # Rhodes International Airport Diagoras (Rhodes, Greece)
+            # ################### AMERICA #######################
+            # "BOG", # El Dorado International Airport (Bogotá)
+            # "MDE", # José María Córdova International Airport (Medellín)
+            # "CLO", # Alfonso Bonilla Aragón International Airport (Cali)
+            # "CTG", # Rafael Núñez International Airport (Cartagena)
+            # "BAQ", # Ernesto Cortissoz International Airport (Barranquilla)    
+            # "CUN", # Cancún International Airport (Cancún, Mexico)
+            # "SJU", # Luis Muñoz Marín International Airport (San Juan, Puerto Rico)
+            # "SJO", # Santamaría International Airport (San José, Costa Rica)
+            # "GIG", # Rio de Janeiro–Galeão International Airport (Rio de Janeiro, Brazil)
+            # "GRU", # São Paulo/Guarulhos–Governador André Franco Montoro International Airport (São Paulo, Brazil)
+            # ####################### ASIA #######################
+            # "ICN", # Incheon International Airport (Seoul, South Korea)
+            # "GMP", # Gimpo International Airport (Seoul, South Korea)
+            # "PUS", # Gimhae International Airport (Busan, South Korea)
+            # "DAD", # Da Nang International Airport (Da Nang, Vietnam)
+            # "HAN", # Noi Bai International Airport (Hanoi, Vietnam)
+            # "SGN", # Tan Son Nhat International Airport (Ho Chi Minh City, Vietnam)
+            # "BKK", # Suvarnabhumi Airport (Bangkok, Thailand)
+            # "DMK", # Don Mueang International Airport (Bangkok, Thailand)
+            # "HKT", # Phuket International Airport (Phuket, Thailand)
+            # "CNX", # Chiang Mai International Airport (Chiang Mai, Thailand)
+            # "PEK", # Beijing Capital International Airport (Beijing, China)
+            # "PVG", # Shanghai Pudong International Airport (Shanghai, China)
+            # "SHA", # Shanghai Hongqiao International Airport (Shanghai, China)
+            # "CAN", # Guangzhou Baiyun International Airport (Guangzhou, China)
+            # "SZX", # Shenzhen Bao'an International Airport (Shenzhen, China)
+            # "HGH", # Hangzhou Xiaoshan International Airport (Hangzhou, China)
+            # "CTU", # Chengdu Shuangliu International Airport (Chengdu, China)
+            # "TFU", # Chengdu Tianfu International Airport (Chengdu, China)
+            # "HKG", # Hong Kong International Airport (Hong Kong, China)
+            # "TPE", # Taiwan Taoyuan International Airport (Taipei, Taiwan)
+            # "HND", # Haneda Airport (Tokyo, Japan)
+            # "KIX", # Kansai International Airport (Osaka, Japan)
+            # "CMB", # Bandaranaike International Airport (Colombo, Sri Lanka)
+            # "MNL", # Ninoy Aquino International Airport (Manila, Philippines)
+            # "CEB", # Mactan-Cebu International Airport (Cebu, Philippines)
+            # "DVO", # Francisco Bangoy International Airport (Davao, Philippines)
+        ],
+        "FirstDepartureDate": "2025-08-04",
         "LastDepartureDate": "2025-08-10",
         "HowManyDays": 15,
         "FlexDays": 6,
@@ -238,7 +261,7 @@ def main():
             logger.warning("No URLs generated. Exiting.")
             return
         
-        print_configurations(search_params, urls)
+        print_configurations(search_params, urls)     
         user_confirm = lambda prompt: input(prompt).strip().lower() in ['', 'y', 'yes']
         if not user_confirm("Do you want to continue? (y/n): "):
             logger.warning("User chose not to continue. Exiting.")
