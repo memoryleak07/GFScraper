@@ -1,0 +1,20 @@
+{
+  "FromAirports": [
+    "FCO",
+    "NAP",
+    "MXP",
+    "LIN",
+    "BLQ",
+    "VCE",
+    "TRN",
+    "BGY",
+    "PSA",
+    "GOA"
+  ],
+  "ToAirports": ["BOG", "MDE", "CLO", "CTG", "BAQ"],
+  "FirstDepartureDate": "2025-08-04",
+  "LastDepartureDate": "2025-08-10",
+  "HowManyDays": 15,
+  "FlexDays": 6,
+  "OnlyWeekend": false
+}

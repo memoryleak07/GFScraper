@@ -1,4 +1,5 @@
 import time
+import json
 import threading
 import concurrent.futures
 from typing import List, Dict, Any
@@ -185,77 +186,18 @@ def save_worker_result(result: Dict[str, Any]) -> None:
     append_result_to_csv(result)
 
 def main():
-    search_params = {
-        "FromAirports": [
-            "FCO",  # Roma-Fiumicino (hub internazionale, voli diretti annuali/stagionali)
-            "NAP",  # Napoli-Capodichino (voli stagionali estivi)
-            "MXP",  # Milano-Malpensa (voli diretti annuali e stagionali)
-            "LIN",  # Milano-Linate (voli stagionali estivi)
-            "BLQ",  # Bologna (voli stagionali)
-            "VCE",  # Venezia-Marco Polo (voli stagionali estivi)
-            "TRN",  # Torino-Caselle (voli charter/estivi)
-            "BGY",  # Bergamo-Orio al Serio (voli low-cost stagionali)
-            "PSA",  # Pisa (voli charter/estivi)
-            "GOA",  # Genova (voli stagionali limitati)
-            # "PMO",  # Palermo (voli stagionali estivi)
-            # "CTA",  # Catania (voli estivi)
-            # "BRI",  # Bari (voli charter/estivi)
-        ],
-        "ToAirports": [
-            # ################### EUROPE #######################
-            "AYT", # Antalya Airport (Antalya, Turkey)
-            "DLM", # Dalaman Airport (Dalaman, Turkey)
-            "GZP", # Gazipaşa-Alanya Airport (Gazipaşa, Turkey)
-            "BJV", # Milas-Bodrum Airport (Bodrum, Turkey)
-            "ADA", # Adnan Menderes Airport (Izmir, Turkey)
-            # "RHO", # Rhodes International Airport Diagoras (Rhodes, Greece)
-            # ################### AMERICA #######################
-            # "BOG", # El Dorado International Airport (Bogotá)
-            # "MDE", # José María Córdova International Airport (Medellín)
-            # "CLO", # Alfonso Bonilla Aragón International Airport (Cali)
-            # "CTG", # Rafael Núñez International Airport (Cartagena)
-            # "BAQ", # Ernesto Cortissoz International Airport (Barranquilla)    
-            # "CUN", # Cancún International Airport (Cancún, Mexico)
-            # "SJU", # Luis Muñoz Marín International Airport (San Juan, Puerto Rico)
-            # "SJO", # Santamaría International Airport (San José, Costa Rica)
-            # "GIG", # Rio de Janeiro–Galeão International Airport (Rio de Janeiro, Brazil)
-            # "GRU", # São Paulo/Guarulhos–Governador André Franco Montoro International Airport (São Paulo, Brazil)
-            # ####################### ASIA #######################
-            # "ICN", # Incheon International Airport (Seoul, South Korea)
-            # "GMP", # Gimpo International Airport (Seoul, South Korea)
-            # "PUS", # Gimhae International Airport (Busan, South Korea)
-            # "DAD", # Da Nang International Airport (Da Nang, Vietnam)
-            # "HAN", # Noi Bai International Airport (Hanoi, Vietnam)
-            # "SGN", # Tan Son Nhat International Airport (Ho Chi Minh City, Vietnam)
-            # "BKK", # Suvarnabhumi Airport (Bangkok, Thailand)
-            # "DMK", # Don Mueang International Airport (Bangkok, Thailand)
-            # "HKT", # Phuket International Airport (Phuket, Thailand)
-            # "CNX", # Chiang Mai International Airport (Chiang Mai, Thailand)
-            # "PEK", # Beijing Capital International Airport (Beijing, China)
-            # "PVG", # Shanghai Pudong International Airport (Shanghai, China)
-            # "SHA", # Shanghai Hongqiao International Airport (Shanghai, China)
-            # "CAN", # Guangzhou Baiyun International Airport (Guangzhou, China)
-            # "SZX", # Shenzhen Bao'an International Airport (Shenzhen, China)
-            # "HGH", # Hangzhou Xiaoshan International Airport (Hangzhou, China)
-            # "CTU", # Chengdu Shuangliu International Airport (Chengdu, China)
-            # "TFU", # Chengdu Tianfu International Airport (Chengdu, China)
-            # "HKG", # Hong Kong International Airport (Hong Kong, China)
-            # "TPE", # Taiwan Taoyuan International Airport (Taipei, Taiwan)
-            # "HND", # Haneda Airport (Tokyo, Japan)
-            # "KIX", # Kansai International Airport (Osaka, Japan)
-            # "CMB", # Bandaranaike International Airport (Colombo, Sri Lanka)
-            # "MNL", # Ninoy Aquino International Airport (Manila, Philippines)
-            # "CEB", # Mactan-Cebu International Airport (Cebu, Philippines)
-            # "DVO", # Francisco Bangoy International Airport (Davao, Philippines)
-        ],
-        "FirstDepartureDate": "2025-08-04",
-        "LastDepartureDate": "2025-08-10",
-        "HowManyDays": 15,
-        "FlexDays": 6,
-        "OnlyWeekend": False
-    }
-
     try: 
+        with open('settings.json', 'r') as file:
+            search_params = json.load(file)
+        
+        if not search_params:
+            logger.warning("No settings.json found. Exiting.")
+            return
+
+        if not is_date_range_valid(search_params):
+            logger.warning("Dates from settings.json are invalid. Exiting.")
+            return
+
         urls = generate_google_flight_urls(search_params)
         if not urls:
             logger.warning("No URLs generated. Exiting.")

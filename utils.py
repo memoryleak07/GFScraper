@@ -3,6 +3,7 @@ import os
 import csv
 import json
 import time
+from datetime import date
 from typing import Dict, Any
 from typing import Dict, Any
 from logging_config import setup_logger
@@ -152,3 +153,12 @@ def clean_text(text: str) -> str:
     text = re.sub(r'[\u202f\u2013\u20ac]', '', text) # Remove special Unicode characters
     text = ' '.join(text.split()) # Normalize whitespace
     return text.strip()
+
+def is_date_range_valid(search_params: dict) -> bool:
+    today = str(date.today())
+    first = search_params["FirstDepartureDate"]
+    last = search_params["LastDepartureDate"]
+    if today < first < last:
+        return True
+    
+    return False
