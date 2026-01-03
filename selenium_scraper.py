@@ -1,10 +1,12 @@
 import os
 import time
 import logging
-from typing import Dict, List, Any, Optional, Union, Callable
+from typing import Dict, List, Any, Optional, Callable
 from datetime import datetime
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -26,7 +28,6 @@ class SeleniumScraper:
         self,
         headless: bool = True,
         timeout: int = 5,
-        browser_path: Optional[str] = None,
         user_agent: Optional[str] = None,
         proxy: Optional[str] = None,
         download_path: Optional[str] = None,
@@ -38,7 +39,6 @@ class SeleniumScraper:
         Args:
             headless: Whether to run the browser in headless mode
             timeout: Default timeout for Selenium waits in seconds
-            browser_path: Optional path to browser binary (Chrome/Chromium)
             user_agent: Optional custom user agent string
             proxy: Optional proxy server address (format: "host:port")
             download_path: Optional path to download directory
@@ -46,7 +46,6 @@ class SeleniumScraper:
         self.timeout = timeout
         self.driver = None
         self.headless = headless
-        self.browser_path = browser_path
         self.user_agent = user_agent
         self.proxy = proxy
         self.download_path = download_path
@@ -95,16 +94,10 @@ class SeleniumScraper:
                 }
             chrome_options.add_experimental_option("prefs", prefs)
 
-        # Use custom binary location if provided
-        if self.browser_path:
-            chrome_options.binary_location = self.browser_path
-
         self.logger.info("Initializing Chrome WebDriver...")
 
         try:
-            # service = Service(ChromeDriverManager().install())
-            service = Service(executable_path="chromedriver-win64\\chromedriver.exe")
-
+            service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
             driver.set_page_load_timeout(self.timeout)
             self.driver = driver

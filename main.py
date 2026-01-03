@@ -175,7 +175,7 @@ def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> List[Dic
             logger.warning("Keyboard interrupt received, shutting down executor...")
             stop_event.set()
             executor.shutdown(wait=False, cancel_futures=True)
-            return
+            os._exit(1)
         
     logger.info("Scraping completed.")
     return results
