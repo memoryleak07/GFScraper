@@ -90,62 +90,31 @@ def append_result_to_json(result: Dict[str, Any], filename: str = "result.json")
 
 def append_result_to_csv(result: Dict[str, Any], filename: str = "results.csv") -> None:
     """
-    Append a result dictionary to a CSV file, including metadata.
+    Append a result dictionary to a CSV file, including metadata and error info if present.
     """
     if not config.CURRENT_RESULTS_FOLDER:
         raise ValueError("Results folder not initialized. Call create_results_folder first.")
-    
     if not result:
         logger.warning("No result to write to CSV.")
         return
     
-    # Check if data exists and is not None
-    if 'data' not in result or result['data'] is None:
-        logger.warning(f"Result has no valid data to write to CSV: {result}")
-        return
-    
-    # Extract data
-    data = {k: v for k, v in result['data'].items()}
-    if not data:
-        logger.warning("No data to write to CSV.")
-        return
-    
-    # Determine the number of rows (length of longest list)
-    max_len = max(len(values) for values in data.values())
-    
-    # Prepare fieldnames 
-    fieldnames = ['timestamp', 'from', 'to', 'outbound', 'inbound'] + list(data.keys())
-
-    # Determine the number of rows to write
-    max_len = max(len(v) for v in data.values())
-
     filepath = os.path.join(config.CURRENT_RESULTS_FOLDER, filename)
     file_exists = os.path.isfile(filepath)
+    # Gather all possible keys
+    base_keys = ['timestamp', 'url', 'status', 'from', 'to', 'outbound', 'inbound', 'error', 'attempts', 'duration']
+    data_keys = list(result.get('data', {}).keys()) if result.get('data') else []
+    fieldnames = base_keys + data_keys
+    # Prepare row
+    row = {k: result.get(k, '') for k in base_keys}
+    for k in data_keys:
+        v = result['data'][k]
+        row[k] = v[0] if isinstance(v, list) and v else v if v else ''
     with open(filepath, mode='a', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
         if not file_exists:
             writer.writeheader()
-
-        for i in range(max_len):
-            row = {
-                'timestamp': result['timestamp'],
-                'from': result['from'],
-                'to': result['to'],
-                'outbound': result['outbound'],
-                'inbound': result['inbound']
-            }
-
-            # Add data values, filling missing ones with ''
-            for key in data.keys():
-                row[key] = data[key][i] if i < len(data[key]) else ''
-
-            # Skip faulty lines: all fields should be non-empty (after stripping)
-            if all(str(value).strip() for value in row.values()):
-                writer.writerow(row)
-                logger.info(f"Row written to CSV: {row}")
-            else:
-                logger.warning(f"Row skipped due to empty fields: {row}")
+        writer.writerow(row)
+        logger.info(f"Result written to CSV: {row}")
 
 def clean_text(text: str) -> str:
     """Remove special characters, quotes, and normalize whitespace."""
@@ -160,5 +129,4 @@ def is_date_range_valid(search_params: dict) -> bool:
     last = search_params["LastDepartureDate"]
     if today < first < last:
         return True
-    
     return False
