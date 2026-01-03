@@ -12,9 +12,9 @@
     "GOA"
   ],
   "ToAirports": ["BOG", "MDE", "CLO", "CTG", "BAQ"],
-  "FirstDepartureDate": "2025-08-04",
-  "LastDepartureDate": "2025-08-10",
+  "FirstDepartureDate": "2026-03-01",
+  "LastDepartureDate": "2026-12-28",
   "HowManyDays": 15,
-  "FlexDays": 6,
+  "FlexDays": 2,
   "OnlyWeekend": false
 }
