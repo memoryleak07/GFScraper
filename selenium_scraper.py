@@ -10,17 +10,11 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import (
-    TimeoutException,
-    NoSuchElementException,
-    StaleElementReferenceException,
-    WebDriverException,
-)
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import (TimeoutException, WebDriverException,)
 
-import config
 from logging_config import setup_logger
 
+CHROMEDRIVER_VERSION_MISMATCH_ERROR = "only supports Chrome version"
 
 class SeleniumScraper:
     """
@@ -116,6 +110,13 @@ class SeleniumScraper:
             self.driver = driver
             self.logger.info("WebDriver initialized successfully")
             return driver
+        except WebDriverException as e:
+            msg = str(e)
+            self.logger.critical(f"WebDriver init failed: {msg}")   
+            if CHROMEDRIVER_VERSION_MISMATCH_ERROR in msg:
+                self.logger.critical("Fatal Selenium error. Shutting down application.")
+                os._exit(1)
+            raise
         except Exception as e:
             self.logger.error(f"Failed to initialize WebDriver: {str(e)}")
             raise
