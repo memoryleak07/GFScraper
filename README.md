@@ -10,7 +10,6 @@ A Python tool that scrapes Google Flights concurrently to find the best flight p
 - Saves results incrementally to JSON and CSV as each URL is processed
 - Takes a screenshot for every scraped page
 - Supports flexible date ranges, trip duration, and weekend-only filtering
-- Graceful shutdown on keyboard interrupt
 
 ## Requirements
 
