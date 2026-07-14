@@ -57,6 +57,7 @@ def main():
             "error": None
         }
     
+    test_logger = setup_logger('Test')
     with SeleniumScraper(headless=False) as scraper:
         attempts = 0
         success = False

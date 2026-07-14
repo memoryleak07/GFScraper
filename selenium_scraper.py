@@ -52,6 +52,15 @@ class SeleniumScraper:
         # self.screenshots_dir = "screenshots"
         self.logger = logger or setup_logger("Scraper")
 
+    def _get_wdm_log_level(self) -> int:
+        """Return the effective webdriver-manager log level based on the scraper logger."""
+        if self.logger.level == logging.NOTSET:
+            return logging.WARNING
+
+        if self.logger.level <= logging.DEBUG:
+            return logging.DEBUG
+        return logging.WARNING
+
     def initialize_driver(self):
         """
         Initialize and configure the Chrome WebDriver.
@@ -94,14 +103,16 @@ class SeleniumScraper:
                 }
             chrome_options.add_experimental_option("prefs", prefs)
 
-        self.logger.info("Initializing Chrome WebDriver...")
+        self.logger.debug("Initializing Chrome WebDriver...")
 
         try:
-            service = Service(ChromeDriverManager().install())
+            wdm_log_level = self._get_wdm_log_level()
+            logging.getLogger("WDM").setLevel(wdm_log_level)
+            service = Service(ChromeDriverManager(log_level=wdm_log_level).install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
             driver.set_page_load_timeout(self.timeout)
             self.driver = driver
-            self.logger.info("WebDriver initialized successfully")
+            self.logger.debug("WebDriver initialized successfully")
             return driver
         except WebDriverException as e:
             msg = str(e)
@@ -117,7 +128,7 @@ class SeleniumScraper:
     def close_driver(self):
         """Close the WebDriver instance."""
         if self.driver:
-            self.logger.info("Closing WebDriver...")
+            self.logger.debug("Closing WebDriver...")
             try:
                 self.driver.quit()
             except Exception as e:
@@ -158,7 +169,7 @@ class SeleniumScraper:
             )
             return element
         except TimeoutException:
-            self.logger.warning(f"Timeout waiting for element: {selector}")
+            self.logger.debug(f"Timeout waiting for element: {selector}")
             return None
 
     def wait_for_elements(
@@ -184,7 +195,7 @@ class SeleniumScraper:
             )
             return elements
         except TimeoutException:
-            self.logger.warning(f"Timeout waiting for elements: {selector}")
+            self.logger.debug(f"Timeout waiting for elements: {selector}")
             return []
 
     def wait_for_clickable(
@@ -210,7 +221,7 @@ class SeleniumScraper:
             )
             return element
         except TimeoutException:
-            self.logger.warning(f"Timeout waiting for clickable element: {selector}")
+            self.logger.debug(f"Timeout waiting for clickable element: {selector}")
             return None
 
     def navigate_to_url(self, url: str) -> bool:
@@ -223,10 +234,10 @@ class SeleniumScraper:
         Returns:
             bool: Whether navigation was successful
         """
-        self.logger.info(f"Navigating to URL: {url}")
+        self.logger.debug(f"Navigating to URL: {url}")
 
         if not self.driver:
-            self.logger.warning("Driver not initialized. Initializing now...")
+            self.logger.debug("Driver not initialized. Initializing now...")
             self.initialize_driver()
 
         try:
@@ -237,7 +248,7 @@ class SeleniumScraper:
                 lambda d: d.execute_script("return document.readyState") == "complete"
             )
 
-            self.logger.info("Navigation successful")
+            self.logger.debug("Navigation successful")
             return True
         except Exception as e:
             self.logger.error(f"Navigation failed: {str(e)}")
@@ -259,7 +270,7 @@ class SeleniumScraper:
             try:
                 return element.text.strip()
             except Exception as e:
-                self.logger.warning(
+                self.logger.debug(
                     f"Error getting text from element {selector}: {str(e)}"
                 )
         return None
@@ -283,7 +294,7 @@ class SeleniumScraper:
             try:
                 return element.get_attribute(attribute)
             except Exception as e:
-                self.logger.warning(
+                self.logger.debug(
                     f"Error getting attribute {attribute} from element {selector}: {str(e)}"
                 )
         return None
@@ -308,13 +319,13 @@ class SeleniumScraper:
                 element.click()
                 return True
             except Exception as e:
-                self.logger.warning(f"Error clicking element {selector}: {str(e)}")
+                self.logger.debug(f"Error clicking element {selector}: {str(e)}")
                 try:
                     # Try JavaScript click as fallback
                     self.driver.execute_script("arguments[0].click();", element)
                     return True
                 except Exception as js_e:
-                    self.logger.warning(f"JavaScript click also failed: {str(js_e)}")
+                    self.logger.debug(f"JavaScript click also failed: {str(js_e)}")
         return False
 
     def input_text(self, by: By, selector: str, text: str) -> bool:
@@ -336,7 +347,7 @@ class SeleniumScraper:
                 element.send_keys(text)
                 return True
             except Exception as e:
-                self.logger.warning(
+                self.logger.debug(
                     f"Error inputting text to element {selector}: {str(e)}"
                 )
         return False
@@ -355,7 +366,7 @@ class SeleniumScraper:
         try:
             return self.driver.execute_script(script, *args)
         except Exception as e:
-            self.logger.warning(f"Error executing script: {str(e)}")
+            self.logger.debug(f"Error executing script: {str(e)}")
             return None
 
     def get_page_source(self) -> str:
@@ -383,7 +394,7 @@ class SeleniumScraper:
 
         try:
             self.driver.save_screenshot(filename)
-            self.logger.info(f"Screenshot saved to {filename}")
+            self.logger.debug(f"Screenshot saved to {filename}")
             return filename
         except Exception as e:
             self.logger.warning(f"Error taking screenshot: {str(e)}")
@@ -405,7 +416,7 @@ class SeleniumScraper:
             )
             return True
         except Exception as e:
-            self.logger.warning(f"Error scrolling to element: {str(e)}")
+            self.logger.debug(f"Error scrolling to element: {str(e)}")
             return False
 
     def scroll_down(self, amount: int = 500) -> None:
@@ -452,7 +463,7 @@ class SeleniumScraper:
             self.driver.switch_to.frame(frame_reference)
             return True
         except Exception as e:
-            self.logger.warning(f"Error switching to frame: {str(e)}")
+            self.logger.debug(f"Error switching to frame: {str(e)}")
             return False
 
     def switch_to_default_content(self) -> None:
@@ -473,7 +484,7 @@ class SeleniumScraper:
             self.driver.switch_to.window(window_handle)
             return True
         except Exception as e:
-            self.logger.warning(f"Error switching to window: {str(e)}")
+            self.logger.debug(f"Error switching to window: {str(e)}")
             return False
 
     def get_window_handles(self) -> List[str]:
@@ -593,10 +604,10 @@ class SeleniumScraper:
             filepath = os.path.abspath(filename)
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(self.driver.page_source)
-            self.logger.info(f"Page source saved to {filepath}")
+            self.logger.debug(f"Page source saved to {filepath}")
             return filepath
         except Exception as e:
-            self.logger.warning(f"Error saving page source: {str(e)}")
+            self.logger.debug(f"Error saving page source: {str(e)}")
             return None
 
     def extract_data(self, selectors: Dict[str, tuple]) -> Dict[str, Any]:
@@ -667,7 +678,7 @@ class SeleniumScraper:
         Returns:
             bool: Whether the cookies were successfully accepted
         """
-        self.logger.info("Attempting to accept Google cookies...")
+        self.logger.debug("Attempting to accept Google cookies...")
 
         try:
             if not self.driver:
@@ -679,42 +690,42 @@ class SeleniumScraper:
                 By.XPATH, "//button[contains(., 'Accept all')]"
             )
             if accept_buttons:
-                self.logger.info("Found 'Accept all' button by text")
+                self.logger.debug("Found 'Accept all' button by text")
                 return self.click_element(
                     By.XPATH, "//button[contains(., 'Accept all')]"
                 )
 
             # Second method: Try common Google cookie button ID
             if self.driver.find_elements(By.ID, "L2AGLb"):
-                self.logger.info("Found Google cookie button by ID 'L2AGLb'")
+                self.logger.debug("Found Google cookie button by ID 'L2AGLb'")
                 return self.click_element(By.ID, "L2AGLb")
 
             # Third method: Look for buttons in the cookie dialog
             cookie_dialog = self.driver.find_elements(By.XPATH, "//div[@role='dialog']")
             if cookie_dialog:
-                self.logger.info("Found cookie dialog, looking for buttons within it")
+                self.logger.debug("Found cookie dialog, looking for buttons within it")
                 buttons = cookie_dialog[0].find_elements(By.TAG_NAME, "button")
                 # Usually the "Accept all" button is the second button
                 if len(buttons) >= 2:
                     try:
                         buttons[1].click()
-                        self.logger.info(
+                        self.logger.debug(
                             "Clicked on the second button in cookie dialog"
                         )
                         return True
                     except Exception as e:
-                        self.logger.warning(f"Failed to click second button: {str(e)}")
+                        self.logger.debug(f"Failed to click second button: {str(e)}")
 
             # Fourth method: Try another common selector
             if self.driver.find_elements(
                 By.CSS_SELECTOR, ".cookie-dialog button.accept-button"
             ):
-                self.logger.info("Found cookie accept button by CSS selector")
+                self.logger.debug("Found cookie accept button by CSS selector")
                 return self.click_element(
                     By.CSS_SELECTOR, ".cookie-dialog button.accept-button"
                 )
 
-            self.logger.warning("Could not find Google cookie consent button")
+            self.logger.debug("Could not find Google cookie consent button")
             return False
         except Exception as e:
             self.logger.error(f"Error accepting Google cookies: {str(e)}")

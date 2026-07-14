@@ -1,192 +1,88 @@
-import time
+import argparse
 import json
-import threading
-import concurrent.futures
-from typing import List, Dict, Any
-from selenium.webdriver.common.by import By
+from typing import Dict, Any, List
+from google_flight import generate_google_flight_urls
+from utils import (
+    create_results_folder,
+    save_summary_to_json,
+    is_date_range_valid,
+    append_result_to_json,
+    append_result_to_csv,
+)
 from selenium_scraper import SeleniumScraper
-from google_flight import *
-from utils import *
-from logging_config import setup_logger
+from logging_config import setup_logger, configure_logging, parse_log_level
+from scraper_worker import process_urls_concurrently, stop_event
+from reports import print_configurations, print_summary, get_scraping_summary
+import config
 
 MAX_WORKERS = 10
-SELECTORS = {
-        "price": 'div.YMlIz.FpEdX > span',
-        "airline": 'div.sSHqwe.tPgKwe.ogfYpf',
-        "time": 'div.zxVSec.YMlIz.tPgKwe.ogfYpf > span',
-        "duration": 'div.Ak5kof > div',
-        "type": 'div.EfT7Ae.AdWm1c.tPgKwe > span'
-    }
 logger = setup_logger('GFS')
-stop_event = threading.Event()
 
-def print_configurations(search_params, urls):
-    """Print the script configurations."""
-    logger.info("Configuration:")
-    logger.info(f"    From Airports        : {', '.join(search_params['FromAirports'])}")
-    logger.info(f"    To Airports          : {', '.join(search_params['ToAirports'])}")
-    logger.info(f"    First Departure Date : {search_params['FirstDepartureDate']}")
-    logger.info(f"    Last Departure Date  : {search_params['LastDepartureDate']}")
-    logger.info(f"    How Many Days        : {search_params['HowManyDays']}")
-    logger.info(f"    Flex Days            : {search_params['FlexDays']}")
-    logger.info(f"    Only Weekend         : {search_params['OnlyWeekend']}")
-    logger.info(f"    Total Combinations   : {len(urls)}")
-    logger.info(f"    Max Workers          : {MAX_WORKERS}")
-    logger.info(f"    Workers Needed       : {len(urls) // MAX_WORKERS + 1}")
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description='Run the Google Flights scraping workflow.'
+    )
+    parser.add_argument(
+        '--log-level',
+        default='INFO',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+        help='Set the logging level for the application.',
+    )
+    return parser.parse_args()
 
-def print_summary(summary):
-    """Print the summary of the scraping process."""
-    logger.info("Summary:")
-    logger.info(f"    Total URLs           : {summary['total_urls']}")
-    logger.info(f"    Successful URLs      : {summary['successful']}")
-    logger.info(f"    Failed URLs          : {summary['failed']}")
-    logger.info(f"    Total Duration (s)   : {summary['total_duration_seconds']:.2f}")
-    logger.info(f"    Average Time/URL (s) : {summary['average_time_per_url']:.2f}")
-    
-def extract_flight_data(scraper: SeleniumScraper, timestamp: float) -> Dict[str, Any]:
-    """Extract and clean flight information from the current page."""    
-    results = {}
-    scraper.accept_google_cookies()
-    for key, selector in SELECTORS.items():
-        elements = scraper.wait_for_elements(By.CSS_SELECTOR, selector)
-        results[key] = [clean_text(elem.text) for elem in elements if elem.text]
-
-    screenshot = scraper.take_screenshot(f"{config.CURRENT_RESULTS_FOLDER}/screenshots/{timestamp}.png")
-    return {
-        "values": results,
-        "screenshot": screenshot
-    }
-
-def process_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
-    """
-    Process a single URL with a SeleniumScraper instance.
-    This function will be called concurrently for different URLs.
-    
-    Args:
-        url: The URL to process
-        max_retries: Maximum number of retry attempts for failures
-        
-    Returns:
-        Dictionary containing the processing results
-    """
-    timestamp = time.time()
-    result = {
-        "status": "failed",
-        "url": url["url"],
-        "from": url["from"],
-        "to": url["to"],
-        "outbound": url["outbound"],
-        "inbound": url["inbound"],
-        "timestamp": timestamp,
-        "duration": 0,
-        "attempts": 0,
-        "screenshot": None,
-        "data": None,
-        "error": None
-    }
-        
-    # Create a new scraper instance for this thread
-    with SeleniumScraper() as scraper:
-        attempts = 0
-        success = False
-        
-        while attempts < max_retries and not success:
-            attempts += 1
-            if stop_event.is_set():
-                scraper.logger.warning("Stop event set. Exiting thread.")
-                return result
-            try:
-                # Run the complete scraping task using our generic scraper
-                scraping_result = scraper.run_scraping_task(
-                    url["url"], 
-                    lambda s: extract_flight_data(s, timestamp))
-                
-                # Check if the scraping was successful
-                if scraping_result["success"]:
-                    result["status"] = "success"
-                    result["data"] = scraping_result["data"]["values"]
-                    result["screenshot"] = scraping_result["data"]["screenshot"]
-                    success = True
-                else:
-                    scraper.logger.warning(f"Attempt {attempts} failed: {scraping_result['error']}")
-                    if attempts < max_retries:
-                        time.sleep(2)
-            
-            except Exception as e:
-                scraper.logger.error(f"Error in attempt {attempts}: {str(e)}")
-                result["error"] = str(e)
-                if attempts < max_retries:
-                    time.sleep(2)
-    
-    # Include retry information
-    result["attempts"] = attempts
-    result["duration"] = time.time() - timestamp
-    
-    return result
-
-def get_scraping_summary(results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Generate a summary of the scraping results."""
-    summary = {
-        "total_urls": len(results),
-        "successful": sum(1 for r in results if r["status"] == "success"),
-        "failed": sum(1 for r in results if r["status"] != "success"),
-        "total_duration_seconds": sum(r["duration"] for r in results),
-        "average_time_per_url": sum(r["duration"] for r in results) / len(results) if results else 0
-    }
-    return summary
-    
-def process_urls_concurrently(urls: List[str], max_workers: int = 5) -> List[Dict[str, Any]]:
-    """
-    Process multiple URLs concurrently using ThreadPoolExecutor.
-    
-    Args:
-        urls: List of URLs to process
-        max_workers: Maximum number of concurrent workers
-        
-    Returns:
-        List of result dictionaries for each URL
-    """
-    logger.info("Starting scraping...")
-    results = []
-    processed_urls = 0
-    # Using ThreadPoolExecutor to run tasks concurrently
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Submit all URL processing tasks
-        future_to_url = {executor.submit(process_url, url): url for url in urls}        
-        try:
-            # Process results as they complete
-            for future in concurrent.futures.as_completed(future_to_url):
-                if stop_event.is_set(): 
-                    break
-                url = future_to_url[future]
-                try:
-                    result = future.result()
-                except Exception as e:
-                    logger.exception(f"Thread for URL {url} generated an exception: {e}")
-                    result = {"url": url, "status": "exception",  "error": str(e)}
-                finally:
-                    save_worker_result(result)
-                    results.append(result)
-                    processed_urls += 1
-                    logger.info(f"Thread for URL {url} completed. Status: {result['status']}")
-                    logger.info(f"Processed: {processed_urls}/{len(urls)} - Remaining: {len(urls) - processed_urls}")
-
-        except KeyboardInterrupt:
-            logger.warning("Keyboard interrupt received, shutting down executor...")
-            stop_event.set()
-            executor.shutdown(wait=False, cancel_futures=True)
-            os._exit(1)
-        
-    logger.info("Scraping completed.")
-    return results
 
 def save_worker_result(result: Dict[str, Any]) -> None:
     """Save the result to JSON and CSV files."""
     append_result_to_json(result)
     append_result_to_csv(result)
 
+def pre_initialize_chromedriver() -> None:
+    """
+    Pre-initialize ChromeDriver before spawning worker threads.
+    
+    This prevents race conditions when webdriver-manager attempts to extract
+    and rename chromedriver.exe simultaneously from multiple threads.
+    All subsequent worker threads will find the driver already initialized.
+    
+    Raises:
+        Exception: If ChromeDriver initialization fails
+    """
+    logger.debug("Pre-initializing ChromeDriver to avoid thread race conditions...")
+    try:
+        temp_scraper = SeleniumScraper(logger=logger)
+        temp_scraper.initialize_driver()
+        if temp_scraper.driver:
+            temp_scraper.driver.quit()
+        logger.debug("ChromeDriver pre-initialization completed successfully.")
+    except Exception as e:
+        logger.error(f"Failed to pre-initialize ChromeDriver: {e}")
+        raise
+
+def setup_scraping_environment(search_params: Dict[str, Any]) -> None:
+    """
+    Set up the scraping environment before processing URLs.
+    
+    Initializes configuration, creates result folders, and pre-initializes
+    the ChromeDriver to avoid threading issues.
+    
+    Args:
+        search_params: Dictionary containing search parameters from settings
+        
+    Raises:
+        Exception: If any setup step fails
+    """
+    logger.debug("Setting up scraping environment...")
+    config.init()
+    create_results_folder()
+    pre_initialize_chromedriver()
+
 def main():
-    try: 
+    args = parse_args()
+    configure_logging(args.log_level)
+    logger.setLevel(parse_log_level(args.log_level))
+    logger.info("Log level set to %s", args.log_level)
+
+    try:
         with open('settings.json', 'r') as file:
             search_params = json.load(file)
         
@@ -202,21 +98,22 @@ def main():
         if not urls:
             logger.warning("No URLs generated. Exiting.")
             return
-        
-        print_configurations(search_params, urls)     
+
+        logger.info("Starting scraping with %d URLs", len(urls))
+        print_configurations(search_params, urls, MAX_WORKERS)
         user_confirm = lambda prompt: input(prompt).strip().lower() in ['', 'y', 'yes']
         if not user_confirm("Do you want to continue? (y/n): "):
             logger.warning("User chose not to continue. Exiting.")
             return
         
-        config.init()
-        create_results_folder()
-        
-        results = process_urls_concurrently(urls, max_workers=MAX_WORKERS)
+        setup_scraping_environment(search_params)
+
+        results = process_urls_concurrently(urls, max_workers=MAX_WORKERS, result_callback=save_worker_result)
         if not results:
             logger.warning("No results obtained. Exiting.")
             return
-        
+
+        logger.info("Scraping completed with %d result groups", len(results))
         summary = get_scraping_summary(results)
         if not summary: 
             logger.warning("No summary generated. Exiting.")

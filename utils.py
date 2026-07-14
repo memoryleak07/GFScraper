@@ -114,7 +114,6 @@ def append_result_to_csv(result: Dict[str, Any], filename: str = "results.csv") 
         if not file_exists:
             writer.writeheader()
         writer.writerow(row)
-        logger.info(f"Result written to CSV: {row}")
 
 def clean_text(text: str) -> str:
     """Remove special characters, quotes, and normalize whitespace."""
