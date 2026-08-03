@@ -1,3 +1,4 @@
+import inspect
 import os
 import time
 import logging
@@ -61,6 +62,19 @@ class SeleniumScraper:
             return logging.DEBUG
         return logging.WARNING
 
+    def _create_chromedriver_manager(self, log_level: int):
+        """Create a ChromeDriverManager instance compatible with multiple webdriver-manager versions."""
+        manager_cls = ChromeDriverManager
+        try:
+            signature = inspect.signature(manager_cls.__init__)
+            parameters = signature.parameters
+            if "log_level" in parameters:
+                return manager_cls(log_level=log_level)
+        except (TypeError, ValueError):
+            pass
+
+        return manager_cls()
+
     def initialize_driver(self):
         """
         Initialize and configure the Chrome WebDriver.
@@ -108,7 +122,8 @@ class SeleniumScraper:
         try:
             wdm_log_level = self._get_wdm_log_level()
             logging.getLogger("WDM").setLevel(wdm_log_level)
-            service = Service(ChromeDriverManager(log_level=wdm_log_level).install())
+            manager = self._create_chromedriver_manager(wdm_log_level)
+            service = Service(manager.install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
             driver.set_page_load_timeout(self.timeout)
             self.driver = driver

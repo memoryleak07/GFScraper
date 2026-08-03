@@ -1,17 +1,11 @@
 {
   "FromAirports": [
-    "FCO",
-    "NAP",
     "MXP",
-    "LIN",
-    "BLQ",
-    "VCE",
     "TRN",
-    "BGY",
-    "PSA",
-    "GOA"
+    "FCO",
+    "LIN"
   ],
-  "ToAirports": ["BOG", "MDE", "CLO", "CTG", "BAQ"],
+  "ToAirports": ["BOG", "MDE", "KTI", "SAI"],
   "FirstDepartureDate": "2027-02-12",
   "LastDepartureDate": "2027-02-13",
   "HowManyDays": 15,
