@@ -1,7 +1,7 @@
 import argparse
 import json
 from typing import Dict, Any, List
-from google_flight import generate_google_flight_urls
+from google_flights import generate_google_flight_urls
 from utils import (
     create_results_folder,
     save_summary_to_json,

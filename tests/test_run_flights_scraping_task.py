@@ -1,9 +1,13 @@
 import time
 from typing import List, Dict, Any
 from selenium.webdriver.common.by import By
+import sys
+from pathlib import Path
 
+# Adds project root (GFScraper) to Python path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from selenium_scraper import SeleniumScraper
-from google_flight import *
+from google_flights import *
 from utils import *
 
 def extract_flight_data(scraper: SeleniumScraper) -> Dict[str, Any]:
@@ -65,7 +69,7 @@ def main():
         while attempts < max_retries and not success:
             attempts += 1
             try:
-                # Run the complete scraping task using our generic scraper
+                # Run the complete scraping task
                 scraping_result = scraper.run_scraping_task(url, extract_flight_data)
                 
                 # Check if the scraping was successful
@@ -76,13 +80,13 @@ def main():
                 else:
                     scraper.logger.warning(f"Attempt {attempts} failed: {scraping_result['error']}")
                     if attempts < max_retries:
-                        time.sleep(2)  # Wait before retrying
+                        time.sleep(2)
             
             except Exception as e:
                 scraper.logger.error(f"Error in attempt {attempts}: {str(e)}")
                 result["error"] = str(e)
                 if attempts < max_retries:
-                    time.sleep(2)  # Wait before retrying
+                    time.sleep(2)
                     
     print(result)
 

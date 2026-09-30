@@ -1,14 +1,12 @@
 {
   "FromAirports": [
     "MXP",
-    "TRN",
-    "FCO",
-    "LIN"
+    "TRN"
   ],
-  "ToAirports": ["BOG", "MDE", "KTI", "SAI"],
-  "FirstDepartureDate": "2027-02-12",
+  "ToAirports": [ "MDE", "CTG", "BOG"],
+  "FirstDepartureDate": "2027-01-12",
   "LastDepartureDate": "2027-02-13",
-  "HowManyDays": 15,
+  "HowManyDays": 13,
   "FlexDays": 2,
-  "OnlyWeekend": false
+  "OnlyWeekend": true
 }

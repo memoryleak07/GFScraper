@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
-import time
 import itertools
-import json
 
 GOOGLE_FLIGHTS_BASE_URL = "https://www.google.com/travel/flights?q=Flights%20to%20{TO}%20from%20{FROM}%20on%20{OUTBOUND}%20through%20{INBOUND}"
 
@@ -79,42 +77,6 @@ def generate_google_flight_urls(search_params, base_url=GOOGLE_FLIGHTS_BASE_URL)
     return urls
 
 
-def print_urls_results(urls, max_urls=5):
-    """
-    Print the generated URLs in a readable format.
-    
-    Args:
-        urls (list): List of generated URLs
-    """
-    print(f"Generated {len(urls)} URLs:")
-    for i, url_data in enumerate(urls[:max_urls], 1):
-        print(f"\n{i}. From: {url_data['from']} To: {url_data['to']}")
-        print(f"   Outbound: {url_data['outbound']} Inbound: {url_data['inbound']}")
-        print(f"   URL: {url_data['url']}")
-    
-    if len(urls) > max_urls:
-        print(f"\n... and {len(urls) - max_urls} more URLs")
-
-def save_results_to_json(urls, filename=f"{time.time()}_urls.json"):
-    """
-    Save the generated URLs to a JSON file with a summary.
-    
-    Args:
-        urls (list): List of generated URLs
-        filename (str): Name of the JSON file to save the results
-    """
-    summary = {
-        "timestamp": time.time(),
-        "total_urls": len(urls),
-        "first_url": urls[0] if urls else None,
-        "last_url": urls[-1] if urls else None
-    }
-    with open(filename, 'w', encoding='utf-8') as jsonfile:
-        json.dump({"summary": summary, "urls": urls}, jsonfile, indent=2, ensure_ascii=False)
-
-    print(f"Results saved to {filename}")
-
-
 # Example usage
 if __name__ == "__main__":
     search_params = {
@@ -134,5 +96,12 @@ if __name__ == "__main__":
     }
     
     urls = generate_google_flight_urls(search_params)
-    print_urls_results(urls, 5)
-    save_results_to_json(urls)
+    max_urls = 5
+    print(f"Generated {len(urls)} URLs:")
+    for i, url_data in enumerate(urls[:max_urls], 1):
+        print(f"\n{i}. From: {url_data['from']} To: {url_data['to']}")
+        print(f"   Outbound: {url_data['outbound']} Inbound: {url_data['inbound']}")
+        print(f"   URL: {url_data['url']}")
+    
+    if len(urls) > max_urls:
+        print(f"\n... and {len(urls) - max_urls} more URLs")
